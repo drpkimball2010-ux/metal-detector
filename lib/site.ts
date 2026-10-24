@@ -1,6 +1,6 @@
 // Site-wide settings. Change these in one place.
 
-export const SITE_NAME = "Metal Detector";
+export const SITE_NAME = "Track My Stack";
 export const SITE_DOMAIN = "trackmystack.org";
 export const SITE_URL = "https://trackmystack.org";
 

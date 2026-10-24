@@ -2,8 +2,10 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Metal Detector · Track your gold & silver stack",
+  title: "Track My Stack · Gold & silver stack tracker",
   description: "Log your gold, silver, platinum and palladium and see what it's worth at live spot prices.",
+  // Ownership check for the Awin affiliate network
+  other: { "awin-verification": "Awin" },
 };
 
 export const viewport: Viewport = { width: "device-width", initialScale: 1, viewportFit: "cover" };
