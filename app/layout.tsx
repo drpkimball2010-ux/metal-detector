@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Metal Stack",
+  title: "Metal Detector",
   description: "Log your gold, silver, platinum and palladium and see what it's worth at live spot prices.",
 };
 

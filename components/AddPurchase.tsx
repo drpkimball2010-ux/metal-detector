@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import {
-  GRADES, METALS, METAL_KEYS, PRESETS, UNITS, fineOz, fmtDay, fmtOz, todayLocal, usd,
+  GRADES, METALS, METAL_KEYS, PRESETS, UNITS, fineOz, fmtDay, fmtOz, todayLocal, usd, usdSpot,
   type Metal, type Purchase, type Unit,
 } from "@/lib/metals";
 import type { Prices } from "./Dashboard";
@@ -174,10 +174,10 @@ export default function AddPurchase({ prices, onAdded }: { prices: Prices; onAdd
         <p className="preview" style={{ margin: 0 }}>
           That&apos;s <strong className="num">{fmtOz(oz)}</strong> fine troy oz of {METALS[metal].name.toLowerCase()},
           worth <strong className="num">{usd(oz * spotNow)}</strong> today.{" "}
-          {boughtNow && <>Spot price logged with it: <strong className="num">{usd(spotNow)}</strong>. </>}
+          {boughtNow && <>Spot price logged with it: <strong className="num">{usdSpot(spotNow)}</strong>. </>}
           {!boughtNow && daySpot === "loading" && <>Looking up the spot price for that day… </>}
           {!boughtNow && daySpot && daySpot !== "loading" && (
-            <>Spot on {fmtDay(day)}: <strong className="num">{usd(daySpot.price)}</strong>. </>
+            <>Spot on {fmtDay(day)}: <strong className="num">{usdSpot(daySpot.price)}</strong>. </>
           )}
           {!boughtNow && daySpot === null && day && <>No price is recorded near that date, so the spot when bought will show as pending. </>}
           {blankPaid && thenPrice != null && <>What you paid will be logged at spot: <strong className="num">{usd(oz * thenPrice)}</strong>.</>}

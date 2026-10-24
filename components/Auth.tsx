@@ -28,7 +28,7 @@ export default function Auth() {
 
   return (
     <main className="auth">
-      <div className="brand"><span className="brand-mark" aria-hidden="true" /><h1>Metal Stack</h1></div>
+      <div className="brand"><span className="brand-mark" aria-hidden="true" /><h1>Metal Detector</h1></div>
       <p className="muted" style={{ margin: 0 }}>Log your gold, silver, platinum and palladium and see what it&apos;s worth at live spot prices.</p>
       <div className="tabs" role="tablist">
         <button type="button" role="tab" aria-selected={mode === "signin"} onClick={() => { setMode("signin"); setMsg(null); }}>Sign in</button>

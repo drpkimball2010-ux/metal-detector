@@ -1,6 +1,6 @@
 // Shared metal data and math. The fine-ounce formula matches the database's fine_oz().
 
-export type Metal = "XAU" | "XAG" | "XPT" | "XPD";
+export type Metal = "XAU" | "XAG" | "XPT" | "XPD" | "XRH" | "XCU";
 export type Unit = "ozt" | "g" | "kg" | "dwt" | "oz";
 
 export const METALS: Record<Metal, { name: string; color: string }> = {
@@ -8,6 +8,8 @@ export const METALS: Record<Metal, { name: string; color: string }> = {
   XAG: { name: "Silver", color: "var(--ag)" },
   XPT: { name: "Platinum", color: "var(--pt)" },
   XPD: { name: "Palladium", color: "var(--pd)" },
+  XRH: { name: "Rhodium", color: "var(--rh)" },
+  XCU: { name: "Copper", color: "var(--cu)" },
 };
 export const METAL_KEYS = Object.keys(METALS) as Metal[];
 
@@ -28,6 +30,8 @@ export const GRADES: Record<Metal, [string, number][]> = {
   XPT: [["Fine (.9995)", 0.9995], ["Fine (.999)", 0.999], ["950 platinum (.950)", 0.95], ["900 platinum (.900)", 0.9],
         ["850 platinum (.850)", 0.85]],
   XPD: [["Fine (.9995)", 0.9995], ["Fine (.999)", 0.999], ["950 palladium (.950)", 0.95], ["500 palladium (.500)", 0.5]],
+  XRH: [["Fine (.9995)", 0.9995], ["Fine (.999)", 0.999]],
+  XCU: [["Fine (.999)", 0.999], ["Four nines (.9999)", 0.9999], ["Pre-1982 US penny, 95% (.950)", 0.95]],
 };
 
 export type Preset = { id: string; name: string; metals: Metal[] | "*"; weight?: number; unit?: Unit; purity?: number; label?: string };
@@ -43,7 +47,16 @@ export const PRESETS: Preset[] = [
   { id: "junk", name: "90% junk silver ($1 face)", metals: ["XAG"], weight: 0.8038, unit: "ozt", purity: 0.9, label: "90% junk silver, $1 face" },
   { id: "ster", name: "Sterling flatware / jewelry", metals: ["XAG"], weight: 1, unit: "g", purity: 0.925, label: "Sterling silver" },
   { id: "ape", name: "American Platinum Eagle 1 oz", metals: ["XPT"], weight: 1, unit: "ozt", purity: 0.9995, label: "American Platinum Eagle 1 oz" },
+  { id: "rhg", name: "Rhodium bar 1 g", metals: ["XRH"], weight: 1, unit: "g", purity: 0.9995, label: "Rhodium bar 1 g" },
+  { id: "rhoz", name: "Rhodium round 1 oz", metals: ["XRH"], weight: 1, unit: "ozt", purity: 0.9995, label: "Rhodium 1 oz" },
+  { id: "cur", name: "Copper round 1 oz (avdp)", metals: ["XCU"], weight: 1, unit: "oz", purity: 0.999, label: "Copper round 1 oz" },
+  { id: "cub", name: "Copper bar 1 lb", metals: ["XCU"], weight: 16, unit: "oz", purity: 0.999, label: "Copper bar 1 lb" },
+  { id: "penny", name: "Pre-1982 pennies ($1 = 100 coins)", metals: ["XCU"], weight: 311, unit: "g", purity: 0.95, label: "Pre-1982 pennies, $1 face" },
 ];
+
+// Prices under $10 (copper) get more decimal places
+export const usdSpot = (n: number) =>
+  n > 0 && n < 10 ? "$" + n.toLocaleString("en-US", { minimumFractionDigits: 4, maximumFractionDigits: 4 }) : usd(n);
 
 export type SpotRow = { metal: Metal; price: number; quoted_at: string; source: string | null; updated_at: string };
 

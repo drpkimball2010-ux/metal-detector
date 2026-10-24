@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
-import { METALS, METAL_KEYS, fineOz, fmtOz, fmtWhen, usd, type Metal, type Purchase, type SpotRow } from "@/lib/metals";
+import { METALS, METAL_KEYS, fineOz, fmtOz, fmtWhen, usd, usdSpot, type Metal, type Purchase, type SpotRow } from "@/lib/metals";
 import AddPurchase from "./AddPurchase";
 import PurchaseList from "./PurchaseList";
 
@@ -56,14 +56,16 @@ export default function Dashboard({ session }: { session: Session }) {
   }, [purchases, prices]);
 
   const newest = Object.values(prices).reduce<string | null>((a, r) => (!a || (r && r.updated_at > a) ? r?.updated_at ?? a : a), null);
-  const quotedAt = Object.values(prices).reduce<string | null>((a, r) => (!a || (r && r.quoted_at > a) ? r?.quoted_at ?? a : a), null);
   const stale = newest ? Date.now() - Date.parse(newest) > 30 * 60 * 1000 : true;
+  // The updater runs on every 10-minute mark (:00, :10, :20 ...)
+  const nextUpdate = newest ? new Date(Math.floor(Date.parse(newest) / 600_000) * 600_000 + 600_000) : null;
+  const fmtTime = (d: Date | string) => new Date(d).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
   const gain = summary.total - summary.cost;
 
   return (
     <main className="wrap">
       <div className="topbar">
-        <div className="brand"><span className="brand-mark" aria-hidden="true" /><h1>Metal Stack</h1></div>
+        <div className="brand"><span className="brand-mark" aria-hidden="true" /><h1>Metal Detector</h1></div>
         <div className="actions">
           <span className="small muted">{session.user.email}</span>
           <button type="button" onClick={() => supabase.auth.signOut()}>Sign out</button>
@@ -106,14 +108,18 @@ export default function Dashboard({ session }: { session: Session }) {
           <h2>Spot prices</h2>
           <span className={`live ${stale ? "stale" : ""}`}>
             <span className="dot" aria-hidden="true" />
-            {quotedAt ? `USD per troy oz · as of ${fmtWhen(quotedAt)}` : "Loading prices…"}
+            {newest ? `Updated ${fmtTime(newest)}` : "Loading prices…"}
           </span>
         </div>
+        <p className="small muted" style={{ margin: 0 }}>
+          Spot prices refresh automatically every 10 minutes
+          {nextUpdate && !stale ? <>; next update around {fmtTime(nextUpdate)}</> : null}. Prices are in US dollars per troy ounce.
+        </p>
         <div className="tiles spot">
           {METAL_KEYS.map((k) => (
             <div className="tile" key={k}>
               <div className="name"><span className="chip" style={{ background: METALS[k].color }} />{METALS[k].name}</div>
-              <div className="val num">{prices[k] ? usd(prices[k]!.price) : "—"}</div>
+              <div className="val num">{prices[k] ? usdSpot(prices[k]!.price) : "—"}</div>
               <div className="small muted">per troy oz</div>
             </div>
           ))}
@@ -126,8 +132,8 @@ export default function Dashboard({ session }: { session: Session }) {
       <AddPurchase prices={prices} onAdded={(p) => setPurchases((ps) => [p, ...ps])} />
 
       <p className="muted small" style={{ margin: 0 }}>
-        Melt value is fine metal weight × spot price. Spot prices update automatically and can&apos;t be edited.
-        &quot;Spot when bought&quot; uses the price recorded for that day, back to January 1, 2026. Dealers usually buy back
+        Melt value is fine metal weight × spot price. Spot prices refresh every 10 minutes and can&apos;t be edited.
+        &quot;Spot when bought&quot; uses the price recorded for that day, back to January 1, 2026 for gold, silver, platinum and palladium; rhodium and copper start from the day they were added. Dealers usually buy back
         somewhat below spot, and graded or collectible coins can sell above it.
       </p>
     </main>

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { METALS, UNITS, fineOz, fmtDay, fmtOz, fmtWhen, usd, type Purchase } from "@/lib/metals";
+import { METALS, UNITS, fineOz, fmtDay, fmtOz, fmtWhen, usd, usdSpot, type Purchase } from "@/lib/metals";
 import type { Prices } from "./Dashboard";
 
 export default function PurchaseList({ purchases, prices, loaded, onDeleted }: {
@@ -69,7 +69,7 @@ function Row({ p, prices, onDeleted }: { p: Purchase; prices: Prices; onDeleted:
       <td className="r num">
         {spotThen != null ? (
           <>
-            <div>{usd(spotThen)}</div>
+            <div>{usdSpot(spotThen)}</div>
             {p.spot_then_at && <div className="small muted">recorded {p.bought_now ? fmtWhen(p.spot_then_at) : fmtDay(p.spot_then_at.slice(0, 10))}</div>}
             {spotNow > 0 && (() => { const ch = ((spotNow - spotThen) / spotThen) * 100;
               return <div className={`small ${ch >= 0 ? "up" : "down"}`}>{ch >= 0 ? "+" : ""}{ch.toFixed(1)}% since</div>; })()}

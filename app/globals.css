@@ -2,7 +2,7 @@
 :root {
   --bg: #eef1f4; --surface: #ffffff; --sunk: #e3e8ee; --fg: #17202b; --muted: #5b6878; --line: #cfd7e0;
   --accent: #1f5f8b; --accent-fg: #ffffff;
-  --au: #b8860b; --ag: #7d8894; --pt: #5f7f86; --pd: #8a6f86;
+  --au: #b8860b; --ag: #7d8894; --pt: #5f7f86; --pd: #8a6f86; --rh: #4f6d9a; --cu: #b06a3b;
   --up: #1d7a4c; --down: #b23a3a; --warn: #9a6a00;
   --f-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
   --f-body: "IBM Plex Sans", system-ui, -apple-system, sans-serif;
@@ -13,7 +13,7 @@
   :root {
     --bg: #11161c; --surface: #19212a; --sunk: #0d1217; --fg: #e6ebf0; --muted: #93a1b0; --line: #2c3743;
     --accent: #6fb3e0; --accent-fg: #0b1620;
-    --au: #e2b448; --ag: #b9c3cd; --pt: #8fb4bb; --pd: #c3a4bd; --up: #5fcf93; --down: #f07a7a; --warn: #e7b85a;
+    --au: #e2b448; --ag: #b9c3cd; --pt: #8fb4bb; --pd: #c3a4bd; --rh: #93acd6; --cu: #e0956a; --up: #5fcf93; --down: #f07a7a; --warn: #e7b85a;
     color-scheme: dark;
   }
 }
@@ -48,7 +48,7 @@ h2 { font-size: 1.15rem; font-weight: 700; }
 .bar span { display: block; height: 100%; transition: width .4s ease; }
 @media (prefers-reduced-motion: reduce) { .bar span { transition: none; } }
 
-.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
 .tile { background: var(--surface); padding: 14px 16px; display: grid; gap: 2px; min-width: 0; }
 .tiles.spot .tile { background: var(--sunk); }
 .tile .name { display: flex; align-items: center; gap: 8px; font-weight: 600; }
