@@ -1,5 +1,6 @@
 # Metal Stack
 
+
 Log gold, silver, platinum and palladium purchases and see what they're worth at live spot prices.
 Next.js website on top of the Supabase backend (prices update every 10 minutes from MetalpriceAPI).
 
