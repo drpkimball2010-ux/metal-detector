@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
-import Auth from "@/components/Auth";
+import Landing from "@/components/Landing";
 import Dashboard from "@/components/Dashboard";
 
 export default function Home() {
@@ -16,6 +16,7 @@ export default function Home() {
     return () => sub.subscription.unsubscribe();
   }, []);
 
-  if (!ready) return <div className="wrap"><p className="muted">Loading…</p></div>;
-  return session ? <Dashboard session={session} /> : <Auth />;
+  // Signed-out visitors (and search engines) get the public homepage
+  if (ready && session) return <Dashboard session={session} />;
+  return <Landing />;
 }

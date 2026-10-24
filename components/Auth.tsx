@@ -1,18 +1,33 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 
-export default function Auth() {
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
+export default function Auth({ initialMode = "signup" }: { initialMode?: "signin" | "signup" }) {
+  const [mode, setMode] = useState<"signin" | "signup">(initialMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [agree, setAgree] = useState(false);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null);
 
+  // "#signin" links (like the Sign in button at the top) open the sign-in tab
+  useEffect(() => {
+    const sync = () => { if (window.location.hash === "#signin") { setMode("signin"); setMsg(null); } };
+    sync();
+    window.addEventListener("hashchange", sync);
+    return () => window.removeEventListener("hashchange", sync);
+  }, []);
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
-    setBusy(true); setMsg(null);
+    setMsg(null);
+    if (mode === "signup" && !agree) {
+      setMsg({ text: "Please agree to the Terms of Use and Privacy Policy to create an account.", ok: false });
+      return;
+    }
+    setBusy(true);
     if (mode === "signin") {
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) setMsg({ text: error.message === "Invalid login credentials" ? "That email and password don't match an account." : error.message, ok: false });
@@ -27,12 +42,11 @@ export default function Auth() {
   }
 
   return (
-    <main className="auth">
-      <div className="brand"><span className="brand-mark" aria-hidden="true" /><h1>Metal Detector</h1></div>
-      <p className="muted" style={{ margin: 0 }}>Log your gold, silver, platinum and palladium and see what it&apos;s worth at live spot prices.</p>
+    <div className="auth-box" id="get-started">
+      <span id="signin" aria-hidden="true" />
       <div className="tabs" role="tablist">
-        <button type="button" role="tab" aria-selected={mode === "signin"} onClick={() => { setMode("signin"); setMsg(null); }}>Sign in</button>
         <button type="button" role="tab" aria-selected={mode === "signup"} onClick={() => { setMode("signup"); setMsg(null); }}>Create account</button>
+        <button type="button" role="tab" aria-selected={mode === "signin"} onClick={() => { setMode("signin"); setMsg(null); }}>Sign in</button>
       </div>
       <form className="card" onSubmit={submit}>
         <div className="field">
@@ -46,9 +60,15 @@ export default function Auth() {
             value={password} onChange={(e) => setPassword(e.target.value)} />
           {mode === "signup" && <span className="small muted">At least 6 characters.</span>}
         </div>
-        <button className="primary" type="submit" disabled={busy}>{mode === "signin" ? "Sign in" : "Create account"}</button>
+        {mode === "signup" && (
+          <label className="check small" htmlFor="agree">
+            <input id="agree" type="checkbox" checked={agree} onChange={(e) => setAgree(e.target.checked)} />
+            <span>I agree to the <Link href="/terms">Terms of Use</Link> and <Link href="/privacy">Privacy Policy</Link>.</span>
+          </label>
+        )}
+        <button className="primary" type="submit" disabled={busy}>{mode === "signin" ? "Sign in" : "Create free account"}</button>
         {msg && <p className={`msg ${msg.ok ? "ok" : "bad"}`} style={{ margin: 0 }}>{msg.text}</p>}
       </form>
-    </main>
+    </div>
   );
 }

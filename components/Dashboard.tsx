@@ -6,6 +6,10 @@ import { supabase } from "@/lib/supabase";
 import { METALS, METAL_KEYS, fineOz, fmtOz, fmtWhen, usd, usdSpot, type Metal, type Purchase, type SpotRow } from "@/lib/metals";
 import AddPurchase from "./AddPurchase";
 import PurchaseList from "./PurchaseList";
+import WhereToBuy from "./WhereToBuy";
+import AccountSection from "./AccountSection";
+import Footer from "./Footer";
+import { SITE_NAME } from "@/lib/site";
 
 export type Prices = Partial<Record<Metal, SpotRow>>;
 
@@ -65,7 +69,7 @@ export default function Dashboard({ session }: { session: Session }) {
   return (
     <main className="wrap">
       <div className="topbar">
-        <div className="brand"><span className="brand-mark" aria-hidden="true" /><h1>Metal Detector</h1></div>
+        <div className="brand"><span className="brand-mark" aria-hidden="true" /><h1>{SITE_NAME}</h1></div>
         <div className="actions">
           <span className="small muted">{session.user.email}</span>
           <button type="button" onClick={() => supabase.auth.signOut()}>Sign out</button>
@@ -131,11 +135,17 @@ export default function Dashboard({ session }: { session: Session }) {
 
       <AddPurchase prices={prices} onAdded={(p) => setPurchases((ps) => [p, ...ps])} />
 
+      <WhereToBuy />
+
       <p className="muted small" style={{ margin: 0 }}>
         Melt value is fine metal weight × spot price. Spot prices refresh every 10 minutes and can&apos;t be edited.
         &quot;Spot when bought&quot; uses the price recorded for that day, back to January 1, 2026 for gold, silver, platinum and palladium; rhodium and copper start from the day they were added. Dealers usually buy back
         somewhat below spot, and graded or collectible coins can sell above it.
       </p>
+
+      <AccountSection session={session} />
+
+      <Footer />
     </main>
   );
 }
