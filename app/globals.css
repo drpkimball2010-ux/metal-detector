@@ -149,3 +149,5 @@ a:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-
 .dealers { display: flex; flex-wrap: wrap; gap: 10px; }
 .danger { border-color: var(--down); color: var(--down); }
 button.danger-fill { background: var(--down); border-color: var(--down); color: #fff; }
+
+table.pure { min-width: 520px; }

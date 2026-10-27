@@ -50,11 +50,14 @@ export default function Dashboard({ session }: { session: Session }) {
   }, [loadPrices, loadPurchases]);
 
   const summary = useMemo(() => {
-    const by = Object.fromEntries(METAL_KEYS.map((k) => [k, { oz: 0, val: 0 }])) as Record<Metal, { oz: number; val: number }>;
+    const by = Object.fromEntries(METAL_KEYS.map((k) => [k, { oz: 0, val: 0, paid: 0, paidOz: 0 }])) as
+      Record<Metal, { oz: number; val: number; paid: number; paidOz: number }>;
     let total = 0, cost = 0;
     for (const p of purchases) {
       const oz = fineOz(p), v = oz * (prices[p.metal]?.price ?? 0);
       by[p.metal].oz += oz; by[p.metal].val += v; total += v; cost += Number(p.paid ?? 0);
+      // Average cost only counts purchases that have a paid amount
+      if (p.paid != null) { by[p.metal].paid += Number(p.paid); by[p.metal].paidOz += oz; }
     }
     return { by, total, cost };
   }, [purchases, prices]);
@@ -102,10 +105,12 @@ export default function Dashboard({ session }: { session: Session }) {
           <div className="tile" key={k}>
             <div className="name"><span className="chip" style={{ background: METALS[k].color }} />{METALS[k].name}</div>
             <div className="val num">{usd(summary.by[k].val)}</div>
-            <div className="small muted num">{fmtOz(summary.by[k].oz)} fine ozt</div>
+            <div className="small muted num">{fmtOz(summary.by[k].oz)} pure oz</div>
           </div>
         ))}
       </div>
+
+      <PureMetal by={summary.by} />
 
       <section>
         <div className="sechead">
@@ -147,5 +152,49 @@ export default function Dashboard({ session }: { session: Session }) {
 
       <Footer />
     </main>
+  );
+}
+
+// How much pure (fine) metal the user owns, per metal
+const G_PER_OZT = 31.1034768;
+function PureMetal({ by }: { by: Record<Metal, { oz: number; val: number; paid: number; paidOz: number }> }) {
+  const held = METAL_KEYS.filter((k) => by[k].oz > 0);
+  return (
+    <section>
+      <div className="sechead">
+        <h2>Pure metal</h2>
+        <span className="small muted">Fine metal only, after purity</span>
+      </div>
+      <div className="tbl">
+        <table className="pure">
+          <thead>
+            <tr>
+              <th>Metal</th><th className="r">Pure troy oz</th><th className="r">Grams</th>
+              <th className="r">Value now</th><th className="r">Avg cost per oz</th>
+            </tr>
+          </thead>
+          <tbody>
+            {held.length === 0 && (
+              <tr><td colSpan={5} className="empty">Your pure ounces for each metal will show here once you log a purchase.</td></tr>
+            )}
+            {held.map((k) => {
+              const m = by[k];
+              const avg = m.paidOz > 0 ? m.paid / m.paidOz : null;
+              return (
+                <tr key={k}>
+                  <td><span className="name" style={{ display: "inline-flex", alignItems: "center", gap: 8, fontWeight: 600 }}>
+                    <span className="chip" style={{ background: METALS[k].color }} />{METALS[k].name}</span></td>
+                  <td className="r num"><strong>{fmtOz(m.oz)}</strong>
+                    {k === "XCU" && <div className="small muted">{(m.oz * G_PER_OZT / 453.59237).toFixed(2)} lb</div>}</td>
+                  <td className="r num">{(m.oz * G_PER_OZT).toLocaleString("en-US", { maximumFractionDigits: 2, minimumFractionDigits: 2 })}</td>
+                  <td className="r num">{usd(m.val)}</td>
+                  <td className="r num">{avg != null ? usdSpot(avg) : "—"}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </section>
   );
 }
