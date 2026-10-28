@@ -29,6 +29,10 @@ export default function Disclosure() {
           When you click a dealer link, the dealer and its affiliate network may set a cookie that records the visit came
           from {SITE_NAME}. We don&apos;t receive your name, payment details or what you bought, only reports of commissions earned.
         </p>
+        <p>
+          Our affiliate links are tracked by Awin, an affiliate network. To learn more about paid and affiliate
+          advertising, visit <a href="http://paidforadvertising.com/" target="_blank" rel="noopener">paidforadvertising.com</a>.
+        </p>
       </section>
 
       <section>

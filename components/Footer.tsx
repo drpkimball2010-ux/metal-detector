@@ -9,6 +9,7 @@ export default function Footer() {
         <Link href="/privacy">Privacy Policy</Link>
         <Link href="/terms">Terms of Use</Link>
         <Link href="/disclosure">Affiliate Disclosure</Link>
+        <a href="http://paidforadvertising.com/" target="_blank" rel="noopener">About paid advertising</a>
         <span>Contact: <span className="sel">{CONTACT_EMAIL}</span></span>
       </nav>
       <p className="small muted" style={{ margin: 0 }}>

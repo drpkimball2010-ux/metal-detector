@@ -16,7 +16,10 @@ export default function WhereToBuy() {
           </a>
         ))}
       </div>
-      <p className="small muted" style={{ margin: 0 }}>{DISCLOSURE_SHORT}</p>
+      <p className="small muted" style={{ margin: 0 }}>
+        {DISCLOSURE_SHORT}{" "}
+        <a href="http://paidforadvertising.com/" target="_blank" rel="noopener">About paid advertising</a>
+      </p>
     </section>
   );
 }
