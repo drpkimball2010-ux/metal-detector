@@ -11,6 +11,7 @@ export type NewPurchase = {
 export interface PurchaseStore {
   list(): Promise<Purchase[]>;
   add(p: NewPurchase): Promise<Purchase>;
+  addMany(rows: NewPurchase[]): Promise<Purchase[]>;
   remove(id: string): Promise<void>;
 }
 
@@ -42,6 +43,16 @@ export const accountStore: PurchaseStore = {
     const { data, error } = await supabase.from("purchases").insert(p).select().single();
     if (error) throw error;
     return data as Purchase;
+  },
+  async addMany(rows) {
+    // Imports go in batches; the database fills in each row's spot price for its date
+    const out: Purchase[] = [];
+    for (let i = 0; i < rows.length; i += 200) {
+      const { data, error } = await supabase.from("purchases").insert(rows.slice(i, i + 200)).select();
+      if (error) throw error;
+      out.push(...((data ?? []) as Purchase[]));
+    }
+    return out;
   },
   async remove(id) {
     const { error } = await supabase.from("purchases").delete().eq("id", id);
@@ -90,6 +101,12 @@ export function demoStore(currentSpot: (m: Metal) => { price: number; at: string
   return {
     async list() { return readDemo() ?? seed(); },
     async add(p) { const row = await build(p); writeDemo([row, ...(readDemo() ?? [])]); return row; },
+    async addMany(rows) {
+      const built: Purchase[] = [];
+      for (const p of rows) built.push(await build(p));
+      writeDemo([...built, ...(readDemo() ?? [])]);
+      return built;
+    },
     async remove(id) { writeDemo((readDemo() ?? []).filter((r) => r.id !== id)); },
     async reset() { return seed(); },
   };

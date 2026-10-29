@@ -1,5 +1,5 @@
 {
-  "name": "metal-stack",
+  "name": "track-my-stack",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -11,7 +11,8 @@
     "@supabase/supabase-js": "2.117.3",
     "next": "16.4.2",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "read-excel-file": "9.3.12"
   },
   "devDependencies": {
     "@types/node": "22.20.5",

@@ -81,8 +81,15 @@ function Row({ p, prices, store, onDeleted }: { p: Purchase; prices: Prices; sto
         <div>{paid != null ? usd(paid) : "—"}</div>
         {p.paid_from_spot
           ? <div className="small muted">at spot</div>
-          : paid != null && spotThen && oz > 0 && (() => { const prem = ((paid / oz - spotThen) / spotThen) * 100;
-              return <div className="small muted">{prem >= 0 ? "+" : ""}{prem.toFixed(1)}% over spot</div>; })()}
+          : paid != null && spotThen && oz > 0 && (() => {
+              // Premium over melt: what you paid minus the metal's value at spot that day
+              const melt = oz * spotThen, prem = paid - melt, pct = (prem / melt) * 100;
+              return (
+                <div className="small muted" title={`Melt value when bought: ${usd(melt)}`}>
+                  {prem >= 0 ? "+" : "-"}{usd(Math.abs(prem))} over melt ({pct >= 0 ? "+" : ""}{pct.toFixed(1)}%)
+                </div>
+              );
+            })()}
       </td>
       <td className="r num">
         <div>{usd(worth)}</div>

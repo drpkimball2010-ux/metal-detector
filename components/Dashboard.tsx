@@ -8,6 +8,7 @@ import { METALS, METAL_KEYS, fineOz, fmtOz, fmtWhen, usd, usdSpot, type Metal, t
 import AddPurchase from "./AddPurchase";
 import PurchaseList from "./PurchaseList";
 import WhereToBuy from "./WhereToBuy";
+import ImportExport from "./ImportExport";
 import AccountSection from "./AccountSection";
 import Footer from "./Footer";
 import { SITE_NAME } from "@/lib/site";
@@ -177,6 +178,9 @@ export default function Dashboard({ session, demo = false }: { session?: Session
         onDeleted={(id) => setPurchases((ps) => ps.filter((p) => p.id !== id))} />
 
       <AddPurchase prices={prices} store={store} onAdded={(p) => setPurchases((ps) => [p, ...ps])} />
+
+      <ImportExport purchases={purchases} prices={prices} store={store}
+        onImported={(rows) => setPurchases((ps) => [...rows, ...ps])} />
 
       <p className="muted small" style={{ margin: 0 }}>
         Melt value is fine metal weight × spot price. Spot prices refresh every 10 minutes and can&apos;t be edited.
