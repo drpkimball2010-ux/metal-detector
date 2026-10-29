@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { supabase } from "@/lib/supabase";
+import type { PurchaseStore } from "@/lib/store";
 import { METALS, UNITS, fineOz, fmtDay, fmtOz, fmtWhen, usd, usdSpot, type Purchase } from "@/lib/metals";
 import type { Prices } from "./Dashboard";
 
-export default function PurchaseList({ purchases, prices, loaded, onDeleted }: {
-  purchases: Purchase[]; prices: Prices; loaded: boolean; onDeleted: (id: string) => void;
+export default function PurchaseList({ purchases, prices, loaded, store, onDeleted }: {
+  purchases: Purchase[]; prices: Prices; loaded: boolean; store: PurchaseStore; onDeleted: (id: string) => void;
 }) {
   const sorted = [...purchases].sort((a, b) =>
     (b.bought_on ?? b.created_at.slice(0, 10)).localeCompare(a.bought_on ?? a.created_at.slice(0, 10)) ||
@@ -31,7 +31,7 @@ export default function PurchaseList({ purchases, prices, loaded, onDeleted }: {
             {loaded && sorted.length === 0 && (
               <tr><td colSpan={7} className="empty">No purchases yet. Log your first one below and your total updates right away.</td></tr>
             )}
-            {sorted.map((p) => <Row key={p.id} p={p} prices={prices} onDeleted={onDeleted} />)}
+            {sorted.map((p) => <Row key={p.id} p={p} prices={prices} store={store} onDeleted={onDeleted} />)}
           </tbody>
         </table>
       </div>
@@ -39,7 +39,7 @@ export default function PurchaseList({ purchases, prices, loaded, onDeleted }: {
   );
 }
 
-function Row({ p, prices, onDeleted }: { p: Purchase; prices: Prices; onDeleted: (id: string) => void }) {
+function Row({ p, prices, store, onDeleted }: { p: Purchase; prices: Prices; store: PurchaseStore; onDeleted: (id: string) => void }) {
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
   const oz = fineOz(p);
@@ -51,9 +51,8 @@ function Row({ p, prices, onDeleted }: { p: Purchase; prices: Prices; onDeleted:
 
   async function remove() {
     setBusy(true);
-    const { error } = await supabase.from("purchases").delete().eq("id", p.id);
-    setBusy(false);
-    if (!error) onDeleted(p.id); else setConfirming(false);
+    try { await store.remove(p.id); setBusy(false); onDeleted(p.id); }
+    catch { setBusy(false); setConfirming(false); }
   }
 
   return (

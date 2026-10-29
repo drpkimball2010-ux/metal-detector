@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { AUTH_STORAGE_KEY } from "@/lib/supabase";
 
 export const metadata: Metadata = {
   title: "Track My Stack · Gold & silver stack tracker",
@@ -12,8 +13,14 @@ export const viewport: Viewport = { width: "device-width", initialScale: 1, view
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
+        {/* Before the page draws: if this browser has a saved sign-in, skip straight to a loading screen */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{if(localStorage.getItem(${JSON.stringify(AUTH_STORAGE_KEY)}))document.documentElement.dataset.auth="1"}catch(e){}`,
+          }}
+        />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link

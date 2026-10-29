@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { supabase } from "@/lib/supabase";
+import { spotOnDay, type PurchaseStore } from "@/lib/store";
 import {
   GRADES, METALS, METAL_KEYS, PRESETS, UNITS, fineOz, fmtDay, fmtOz, todayLocal, usd, usdSpot,
   type Metal, type Purchase, type Unit,
@@ -10,23 +10,7 @@ import type { Prices } from "./Dashboard";
 
 type DaySpot = { price: number; at: string } | null | "loading";
 
-// Nearest recorded price within 72 hours of midday on a date (same rule the database uses)
-async function spotOnDay(metal: Metal, day: string): Promise<{ price: number; at: string } | null> {
-  const target = new Date(day + "T12:00");
-  const lo = new Date(target.getTime() - 72 * 3600e3).toISOString();
-  const hi = new Date(target.getTime() + 72 * 3600e3).toISOString();
-  const t = target.toISOString();
-  const [before, after] = await Promise.all([
-    supabase.from("price_history").select("price,bucket").eq("metal", metal).lte("bucket", t).gte("bucket", lo).order("bucket", { ascending: false }).limit(1),
-    supabase.from("price_history").select("price,bucket").eq("metal", metal).gte("bucket", t).lte("bucket", hi).order("bucket", { ascending: true }).limit(1),
-  ]);
-  const cands = [...(before.data ?? []), ...(after.data ?? [])];
-  if (!cands.length) return null;
-  cands.sort((a, b) => Math.abs(Date.parse(a.bucket) - target.getTime()) - Math.abs(Date.parse(b.bucket) - target.getTime()));
-  return { price: Number(cands[0].price), at: cands[0].bucket };
-}
-
-export default function AddPurchase({ prices, onAdded }: { prices: Prices; onAdded: (p: Purchase) => void }) {
+export default function AddPurchase({ prices, store, onAdded }: { prices: Prices; store: PurchaseStore; onAdded: (p: Purchase) => void }) {
   const [metal, setMetal] = useState<Metal>("XAG");
   const [preset, setPreset] = useState("bar");
   const [description, setDescription] = useState("");
@@ -87,16 +71,20 @@ export default function AddPurchase({ prices, onAdded }: { prices: Prices; onAdd
     if (!boughtNow && paid.trim() !== "" && !(parseFloat(paid) >= 0)) return setMsg({ text: "Total paid must be a dollar amount.", ok: false });
 
     setBusy(true);
-    const { data, error } = await supabase.from("purchases").insert({
-      metal, description: description.trim() || null,
-      qty: parseFloat(qty), weight: parseFloat(weight), unit, purity, grade: gradeLabel,
-      bought_now: boughtNow, bought_on: boughtNow ? null : day,
-      paid: boughtNow || paid.trim() === "" ? null : parseFloat(paid),
-    }).select().single();
+    let row: Purchase;
+    try {
+      row = await store.add({
+        metal, description: description.trim() || null,
+        qty: parseFloat(qty), weight: parseFloat(weight), unit, purity, grade: gradeLabel,
+        bought_now: boughtNow, bought_on: boughtNow ? null : day,
+        paid: boughtNow || paid.trim() === "" ? null : parseFloat(paid),
+      });
+    } catch {
+      setBusy(false);
+      return setMsg({ text: "Couldn't save that purchase. Check your connection and try again.", ok: false });
+    }
     setBusy(false);
-
-    if (error) return setMsg({ text: "Couldn't save that purchase. Check your connection and try again.", ok: false });
-    onAdded(data as Purchase);
+    onAdded(row);
     setPaid("");
     setMsg({ text: "Added.", ok: true });
   }

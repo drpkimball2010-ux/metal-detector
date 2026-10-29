@@ -1,25 +1,30 @@
 import { DEALERS, DISCLOSURE_SHORT } from "@/lib/site";
 
-// Shown only once at least one dealer link is set in Vercel's environment variables.
-export default function WhereToBuy() {
+// Dealer affiliate banner. Hidden until at least one dealer link is set in Vercel's environment variables.
+// "dashboard" sits right under the signed-in total; "public" sits near the top of the homepage.
+export default function WhereToBuy({ variant = "dashboard" }: { variant?: "dashboard" | "public" }) {
   if (!DEALERS.length) return null;
   return (
-    <section>
-      <div className="sechead">
-        <h2>Add to your stack</h2>
-        <a className="small" href="/disclosure">How these links work</a>
+    <aside className="buy-banner" aria-label="Where to buy">
+      <div className="buy-copy">
+        <strong>{variant === "dashboard" ? "Adding to your stack?" : "Ready to buy metal?"}</strong>
+        <span className="small muted">
+          {variant === "dashboard"
+            ? "Shop a trusted bullion dealer, then log the purchase here."
+            : "Shop a trusted bullion dealer, then track it here for free."}
+        </span>
       </div>
       <div className="dealers">
         {DEALERS.map((d) => (
-          <a key={d.id} className="button-link" href={d.url} target="_blank" rel="sponsored noopener">
+          <a key={d.id} className="button-link primary" href={d.url} target="_blank" rel="sponsored noopener">
             Shop {d.name} ↗
           </a>
         ))}
       </div>
-      <p className="small muted" style={{ margin: 0 }}>
-        {DISCLOSURE_SHORT}{" "}
+      <p className="small muted buy-note">
+        {DISCLOSURE_SHORT} <a href="/disclosure">How these links work</a> ·{" "}
         <a href="http://paidforadvertising.com/" target="_blank" rel="noopener">About paid advertising</a>
       </p>
-    </section>
+    </aside>
   );
 }

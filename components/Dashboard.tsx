@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import { METALS, METAL_KEYS, fineOz, fmtOz, fmtWhen, usd, usdSpot, type Metal, type Purchase, type SpotRow } from "@/lib/metals";
@@ -10,32 +11,47 @@ import WhereToBuy from "./WhereToBuy";
 import AccountSection from "./AccountSection";
 import Footer from "./Footer";
 import { SITE_NAME } from "@/lib/site";
+import { accountStore, demoStore } from "@/lib/store";
 
 export type Prices = Partial<Record<Metal, SpotRow>>;
 
-export default function Dashboard({ session }: { session: Session }) {
+// session: a signed-in user, saved to their account. demo: no account, saved in this browser only.
+export default function Dashboard({ session, demo = false }: { session?: Session | null; demo?: boolean }) {
   const [prices, setPrices] = useState<Prices>({});
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const pricesRef = useRef<Prices>({});
+  pricesRef.current = prices;
+
+  const store = useMemo(() => demo
+    ? demoStore((m) => { const r = pricesRef.current[m]; return r ? { price: r.price, at: r.quoted_at } : null; })
+    : accountStore, [demo]);
 
   const loadPrices = useCallback(async () => {
     const { data, error } = await supabase.from("spot_prices").select("*");
     if (error) { setLoadError("Spot prices couldn't load. Check your connection and reload."); return; }
     const next: Prices = {};
     for (const r of data ?? []) next[r.metal as Metal] = { ...r, price: Number(r.price) } as SpotRow;
+    pricesRef.current = next;
     setPrices(next);
   }, []);
 
   const loadPurchases = useCallback(async () => {
-    const { data, error } = await supabase.from("purchases").select("*").order("created_at", { ascending: false });
-    if (error) { setLoadError("Your purchases couldn't load. Check your connection and reload."); return; }
-    setPurchases((data ?? []) as Purchase[]);
+    try { setPurchases(await store.list()); setLoaded(true); }
+    catch { setLoadError("Your purchases couldn't load. Check your connection and reload."); }
+  }, [store]);
+
+  async function resetDemo() {
+    if (!demo) return;
+    setLoaded(false);
+    setPurchases(await (store as ReturnType<typeof demoStore>).reset());
     setLoaded(true);
-  }, []);
+  }
 
   useEffect(() => {
-    loadPrices(); loadPurchases();
+    // Prices first, so the demo's starter stack can use today's spot
+    loadPrices().then(loadPurchases);
     // Live: new prices arrive the moment the updater saves them
     const channel = supabase
       .channel("spot-prices")
@@ -73,11 +89,31 @@ export default function Dashboard({ session }: { session: Session }) {
     <main className="wrap">
       <div className="topbar">
         <div className="brand"><span className="brand-mark" aria-hidden="true" /><h1>{SITE_NAME}</h1></div>
-        <div className="actions">
-          <span className="small muted">{session.user.email}</span>
-          <button type="button" onClick={() => supabase.auth.signOut()}>Sign out</button>
-        </div>
+        {demo ? (
+          <div className="actions">
+            <Link className="button-link" href="/">Exit demo</Link>
+            <Link className="button-link primary" href="/#get-started">Create free account</Link>
+          </div>
+        ) : (
+          <div className="actions">
+            <span className="small muted">{session?.user.email}</span>
+            <button type="button" onClick={() => supabase.auth.signOut()}>Sign out</button>
+          </div>
+        )}
       </div>
+
+      {demo && (
+        <div className="demo-note" role="note">
+          <div>
+            <strong>You&apos;re trying the demo.</strong>{" "}
+            <span className="muted">This is a sample stack priced at today&apos;s real spot prices. Add or remove anything; it&apos;s kept in this browser only and isn&apos;t saved to an account.</span>
+          </div>
+          <div className="actions">
+            <button type="button" onClick={resetDemo}>Reset demo</button>
+            <Link className="button-link primary" href="/#get-started">Save my own stack</Link>
+          </div>
+        </div>
+      )}
 
       {loadError && <div className="notice" role="alert">{loadError}</div>}
 
@@ -93,6 +129,8 @@ export default function Dashboard({ session }: { session: Session }) {
           )}
         </div>
       </header>
+
+      <WhereToBuy variant="dashboard" />
 
       <div className="bar" aria-hidden="true">
         {summary.total > 0 && METAL_KEYS.map((k) => summary.by[k].val > 0 && (
@@ -135,12 +173,10 @@ export default function Dashboard({ session }: { session: Session }) {
         </div>
       </section>
 
-      <PurchaseList purchases={purchases} prices={prices} loaded={loaded}
+      <PurchaseList purchases={purchases} prices={prices} loaded={loaded} store={store}
         onDeleted={(id) => setPurchases((ps) => ps.filter((p) => p.id !== id))} />
 
-      <AddPurchase prices={prices} onAdded={(p) => setPurchases((ps) => [p, ...ps])} />
-
-      <WhereToBuy />
+      <AddPurchase prices={prices} store={store} onAdded={(p) => setPurchases((ps) => [p, ...ps])} />
 
       <p className="muted small" style={{ margin: 0 }}>
         Melt value is fine metal weight × spot price. Spot prices refresh every 10 minutes and can&apos;t be edited.
@@ -148,7 +184,7 @@ export default function Dashboard({ session }: { session: Session }) {
         somewhat below spot, and graded or collectible coins can sell above it.
       </p>
 
-      <AccountSection session={session} />
+      {!demo && session && <AccountSection session={session} />}
 
       <Footer />
     </main>

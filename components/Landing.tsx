@@ -1,5 +1,7 @@
+import Link from "next/link";
 import Auth from "./Auth";
 import Footer from "./Footer";
+import WhereToBuy from "./WhereToBuy";
 import { SITE_NAME } from "@/lib/site";
 
 // Public homepage for visitors who aren't signed in. The figures in the preview are labeled examples.
@@ -14,7 +16,10 @@ export default function Landing() {
     <main className="wrap landing">
       <div className="topbar">
         <div className="brand"><span className="brand-mark" aria-hidden="true" /><h1>{SITE_NAME}</h1></div>
-        <a className="button-link" href="#signin">Sign in</a>
+        <div className="hero-actions">
+          <Link className="button-link" href="/demo">Try the demo</Link>
+          <a className="button-link" href="#signin">Sign in</a>
+        </div>
       </div>
 
       <section className="hero-landing">
@@ -25,11 +30,14 @@ export default function Landing() {
             Log every coin, bar and round you buy. {SITE_NAME} weighs out the fine metal, prices it at live spot,
             and shows your total value and your gain or loss against what you paid.
           </p>
-          <a className="button-link primary" href="#get-started">Create a free account</a>
+          <div className="hero-actions">
+            <Link className="button-link primary" href="/demo">Try the demo, no account needed</Link>
+            <a className="button-link" href="#get-started">Create a free account</a>
+          </div>
         </div>
 
         <div className="preview" aria-label="Example of the dashboard">
-          <div className="preview-tag small">Example stack</div>
+          <Link className="preview-tag small" href="/demo">Example stack · Try it →</Link>
           <div className="eyebrow">Melt value at spot</div>
           <div className="preview-total num">$14,940.86</div>
           <div className="small up num">Up $1,212.40 (+8.8%)</div>
@@ -44,6 +52,8 @@ export default function Landing() {
           </div>
         </div>
       </section>
+
+      <WhereToBuy variant="public" />
 
       <section className="features">
         <div className="feature">
@@ -68,6 +78,7 @@ export default function Landing() {
         <div>
           <h2>Start tracking your stack</h2>
           <p className="muted">Free to use. Works on your phone, too: open the site and add it to your home screen.</p>
+          <p className="small" style={{ marginTop: 8 }}>Not ready? <Link href="/demo">Try the demo first</Link>, no account needed.</p>
         </div>
         <Auth />
       </section>
