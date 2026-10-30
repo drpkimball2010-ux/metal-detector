@@ -101,6 +101,17 @@ export default function ImportExport({ purchases, prices, store, onImported }: {
     setBusy(false);
   }
 
+  const [exporting, setExporting] = useState(false);
+  async function exportExcel() {
+    setExporting(true); setMsg(null);
+    try {
+      const { exportXlsx } = await import("@/lib/xlsxExport");
+      await exportXlsx(purchases, prices);
+    } catch {
+      setMsg({ text: "Couldn't create the Excel file. Try Plain CSV instead.", ok: false });
+    }
+    setExporting(false);
+  }
   const spotNow = Object.fromEntries(METAL_KEYS.map((k) => [k, prices[k]?.price])) as Partial<Record<Metal, number>>;
 
   return (
@@ -114,11 +125,16 @@ export default function ImportExport({ purchases, prices, store, onImported }: {
           <button type="button" className={open ? "" : "primary"} onClick={() => setOpen((o) => !o)}>
             {open ? "Close import" : "Import from a spreadsheet"}
           </button>
-          <button type="button" disabled={!purchases.length}
-            onClick={() => download(`track-my-stack-${new Date().toISOString().slice(0, 10)}.csv`, toCsv(purchases, spotNow))}>
-            Export to CSV
+          <button type="button" disabled={!purchases.length || exporting} onClick={exportExcel}>
+            {exporting ? "Preparing…" : "Export to Excel"}
           </button>
-          <span className="small muted">Export opens in Excel, Google Sheets or Numbers.</span>
+          <span className="small muted">
+            Summary plus every purchase, valued at today&apos;s spot. Opens in Excel, Google Sheets or Numbers.{" "}
+            <button type="button" className="link" style={{ padding: 0, color: "var(--accent)", fontWeight: 400 }} disabled={!purchases.length}
+              onClick={() => download(`track-my-stack-${new Date().toISOString().slice(0, 10)}.csv`, toCsv(purchases, spotNow))}>
+              Plain CSV
+            </button>
+          </span>
         </div>
 
         {open && (
