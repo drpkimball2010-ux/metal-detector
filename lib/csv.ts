@@ -50,7 +50,7 @@ export const FIELD_LABELS: Record<Field, string> = {
 };
 // Checked in order; the first match wins and each field is used once.
 const HEADER_HINTS: [Field, RegExp][] = [
-  ["ignore", /spot|melt|value|worth|premium|profit|gain|loss|current|market|notes?$|comment|dealer|seller|vendor|source|location|storage|serial|cert|grade[dr] by|^id$/i],
+  ["ignore", /^(year|yr|mint year|mintage)$|spot|melt|value|worth|premium|profit|gain|loss|current|market|notes?$|comment|dealer|seller|vendor|source|location|storage|serial|cert|grade[dr] by|^id$/i],
   ["date", /date|datum|fecha|bought|purchased|^when$|^day$/i],
   ["fineWeight", /\b(asw|agw|apw|apdw|fine (wt|weight|oz|ounces|g)|pure (wt|weight|oz|ounces|metal)|(silver|gold|platinum) (content|weight)|actual (silver|gold))\b/i],
   ["totalWeight", /total.*(weight|wt|oz|ounces|grams)|(weight|wt|oz|ounces).*total/i],
@@ -84,6 +84,100 @@ export function findHeaderRow(grid: string[][]): number {
   return best; // -1 = no header row (data starts at the top)
 }
 export const looksLikeHeader = (row: string[]) => headerScore(row) >= 2;
+
+// Header row with names we don't recognize ("Thing", "Amt", "Wt."): the top row is all
+// short words while the rows under it hold numbers, money or dates.
+export function findHeaderRowAny(grid: string[][]): number {
+  const h = findHeaderRow(grid);
+  if (h >= 0) return h;
+  const first = grid.findIndex((r) => r.some((c) => c));
+  if (first < 0 || first + 1 >= grid.length) return -1;
+  const top = grid[first].filter((c) => c);
+  const isWordy = (c: string) => /[a-z]/i.test(c) && !/\d/.test(c) && c.length < 30;
+  const below = grid.slice(first + 1, first + 6).flat().filter((c) => c);
+  const numeric = below.filter((c) => /\d/.test(c)).length;
+  return top.length >= 2 && top.every(isWordy) && numeric >= below.length * 0.3 ? first : -1;
+}
+
+// ---------- Reading columns by what's in them ----------
+// Used for columns with no header, or a header we don't recognize. Looks at the values
+// (dates, "1 oz", ".999", "$1,950.00", "Silver Eagle"...) and decides what the column holds.
+type Profile = { year: number; date: number; weight: number; purity: number; metal: number; money: number; int: number; num: number; text: number; avgLen: number; median: number; n: number };
+const isPurityValue = (v: string) =>
+  /^\d{1,2}\s*(k|kt|karat|carat)$/i.test(v) || /^0?\.\d{2,4}$/.test(v) || /^9\d{2}(\.\d)?$|^9{4}$/.test(v) ||
+  /^\d{2,3}(\.\d+)?\s*%$/.test(v) || /^(sterling|fine|pure|junk|coin silver|\.?999 fine)$/i.test(v);
+function profile(values: string[]): Profile {
+  const v = values.filter((x) => x).slice(0, 60);
+  const n = v.length || 1;
+  const frac = (f: (x: string) => boolean) => v.filter(f).length / n;
+  const nums = v.map((x) => parseMoney(x)).filter((x): x is number => x != null).sort((a, b) => a - b);
+  return {
+    n: v.length,
+    year: frac((x) => /^(17|18|19|20)\d{2}$/.test(x)),
+    date: frac((x) => !!parseDate(x) && !/^\d{1,4}$/.test(x) && !/[$€£]/.test(x)),
+    weight: frac((x) => /\d/.test(x) && !!parseUnit(x) && !/[$€£]/.test(x) && parseNumber(x) != null),
+    purity: frac(isPurityValue),
+    metal: frac((x) => /^(gold|silver|platinum|palladium|rhodium|copper|au|ag|pt|pd|rh|cu|xau|xag|xpt|xpd|xrh|xcu)$/i.test(x.trim())),
+    money: frac((x) => /[$€£]/.test(x) || /^\d{1,3}(,\d{3})+(\.\d{2})?$|^\d+\.\d{2}$/.test(x)),
+    int: frac((x) => /^\d{1,5}$/.test(x)),
+    num: frac((x) => /^-?[\d.,]+$/.test(x) && parseMoney(x) != null),
+    text: frac((x) => (x.match(/[a-z]/gi)?.length ?? 0) >= 3),
+    avgLen: v.reduce((s, x) => s + x.length, 0) / n,
+    median: nums.length ? nums[Math.floor(nums.length / 2)] : 0,
+  };
+}
+// Returns a field for every column: header names first, then the values decide the rest.
+export function guessColumns(grid: string[][], headerRow: number): Field[] {
+  const width = Math.max(0, ...grid.slice(0, 30).map((r) => r.length));
+  const header = headerRow >= 0 ? grid[headerRow] : [];
+  const fromHeader = guessFields(header);
+  const fields: Field[] = Array.from({ length: width }, (_, i) => fromHeader[i] ?? "ignore");
+  // A header that says "Spot", "Value", "Notes"... is skipped on purpose; don't second-guess it
+  const explicitIgnore = (i: number) => !!header[i] && HEADER_HINTS[0][1].test(header[i]);
+  const data = grid.slice(headerRow + 1).filter((r) => !/^\s*(grand\s*)?(sub)?totals?\b/i.test(r.find((c) => c) ?? ""));
+  const open = fields.map((f, i) => f === "ignore" && !explicitIgnore(i));
+  const P = fields.map((_, i) => profile(data.map((r) => r[i] ?? "")));
+  const used = new Set<Field>(fields.filter((f) => f !== "ignore"));
+  const take = (f: Field, test: (p: Profile, i: number) => boolean, pick: "first" | "longest" = "first") => {
+    if (used.has(f)) return;
+    const cands = P.map((p, i) => i).filter((i) => open[i] && P[i].n > 0 && test(P[i], i));
+    if (!cands.length) return;
+    const i = pick === "longest" ? cands.sort((a, b) => P[b].avgLen - P[a].avgLen)[0] : cands[0];
+    fields[i] = f; open[i] = false; used.add(f);
+  };
+  take("date", (p) => p.date >= 0.6);
+  take("weight", (p) => p.weight >= 0.6);
+  take("purity", (p) => p.purity >= 0.6);
+  take("metal", (p) => p.metal >= 0.6);
+  take("item", (p) => p.text >= 0.6 && p.money < 0.3, "longest");
+
+  // Money columns: with a quantity, "price each × qty = total" tells them apart
+  take("qty", (p) => p.int >= 0.8 && p.median <= 500 && p.money < 0.3);
+  const money = P.map((p, i) => i).filter((i) => open[i] && P[i].n > 0 && P[i].year < 0.8 && (P[i].money >= 0.6 || (P[i].num >= 0.8 && P[i].median > 50)));
+  const qi = fields.indexOf("qty");
+  if (money.length >= 2 && qi >= 0 && !used.has("paid") && !used.has("unitPrice")) {
+    outer: for (const a of money) for (const b of money) {
+      if (a === b) continue;
+      const rows = data.filter((r) => r[a] && r[b]);
+      const hits = rows.filter((r) => {
+        const t = parseMoney(r[a]), e = parseMoney(r[b]), q = parseNumber(r[qi] ?? "") ?? 1;
+        return t != null && e != null && Math.abs(t - e * q) <= Math.max(0.02, t * 0.005);
+      }).length;
+      if (rows.length && hits / rows.length >= 0.8 && rows.some((r) => (parseNumber(r[qi] ?? "") ?? 1) !== 1)) {
+        fields[a] = "paid"; fields[b] = "unitPrice"; open[a] = open[b] = false; used.add("paid"); used.add("unitPrice");
+        break outer;
+      }
+    }
+  }
+  if (!used.has("paid")) {
+    // Several unlabeled money columns and no way to tell: the biggest is most likely what was paid
+    const rest = money.filter((i) => open[i]).sort((a, b) => P[b].median - P[a].median);
+    if (rest.length) { fields[rest[0]] = "paid"; open[rest[0]] = false; used.add("paid"); }
+  }
+  // Plain numbers left over: small ones are weights (troy oz), unless a weight is already known
+  take("weight", (p) => p.num >= 0.8 && p.median > 0 && p.median <= 100);
+  return fields;
+}
 
 // ---------- Value parsing ----------
 type DateOrder = "MDY" | "DMY";
@@ -258,12 +352,14 @@ export function buildRows(rows: string[][], fields: Field[], firstLine = 1, head
       return { line, raw: r, problems: [], purchase: null, skipped: "Looks like a sale, not a purchase" };
 
     const problems: string[] = [];
-    const known = KNOWN.find((k) => k.re.test(item));
-    const metal = (col(r, "metal") && guessMetal(col(r, "metal"))) || guessMetal(item, col(r, "purity")) || known?.metal || null;
+    // Text in columns not used for anything else ("Silver", "Eagle", "1 oz") still counts
+    const spare = r.filter((c, i) => c && (fields[i] ?? "ignore") === "ignore" && !(header[i] && HEADER_HINTS[0][1].test(header[i])) && /[a-z]/i.test(c));
+    const known = KNOWN.find((k) => k.re.test(item)) ?? KNOWN.find((k) => k.re.test(spare.join(" ")));
+    const metal = (col(r, "metal") && guessMetal(col(r, "metal"))) || guessMetal(item, col(r, "purity")) || known?.metal || guessMetal(...spare) || null;
     if (!metal) problems.push("Couldn't tell the metal. Add a Metal column or put the metal in the item name.");
 
     // Quantity: its own column, or "20 x 1 oz" / "Tube of 25" in the item name
-    const qtyFromItem = item.match(/^\s*(\d+)\s*[x×]\s*\S/i)?.[1] ?? item.match(/\b(tube|roll|lot|box) of (\d+)/i)?.[2] ?? item.match(/\((\d+)\)\s*$/)?.[1];
+    const qtyFromItem = item.match(/^\s*(\d+)\s*[x×]\s*\S/i)?.[1] ?? item.match(/\b(tube|roll|lot|box) of (\d+)/i)?.[2] ?? item.match(/\((\d+)\)\s*$/)?.[1] ?? item.match(/\s[x×]\s?(\d+)\s*$/i)?.[1];
     const qtyCell = col(r, "qty");
     let qty = qtyCell ? parseNumber(qtyCell) : qtyFromItem ? Number(qtyFromItem) : 1;
     if (qty != null && qty < 0) return { line, raw: r, problems: [], purchase: null, skipped: "Negative quantity, looks like a sale" };
@@ -285,6 +381,10 @@ export function buildRows(rows: string[][], fields: Field[], firstLine = 1, head
     if (!w) {
       const inItem = item.match(/(\d+\s+\d+\s*\/\s*\d+|\d+\s*\/\s*\d+|\d*\.?\d+)\s*-?\s*(troy\s*)?(ozt|oz|ounces?|grams?|g\b|gr\b|kilos?|kg|lbs?|pounds?)\b/i);
       if (inItem) w = parseWeight(inItem[0]);
+    }
+    if (!w) {
+      const c = spare.find((x) => /^\s*(\d+\s*\/\s*\d+|\d*\.?\d+)\s*-?\s*(troy\s*)?(ozt|oz|ounces?|grams?|g|gr|kilos?|kg|lbs?|pounds?)\.?\s*$/i.test(x));
+      if (c) w = parseWeight(c);
     }
     if (!w) problems.push("Missing weight, like 1 oz or 31.1 g.");
 

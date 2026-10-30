@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { FIELD_LABELS, TEMPLATE_CSV, buildRows, cellsToText, findHeaderRow, guessFields, parseCsv, toCsv, type Field } from "@/lib/csv";
+import { FIELD_LABELS, TEMPLATE_CSV, buildRows, cellsToText, findHeaderRowAny, guessColumns, parseCsv, toCsv, type Field } from "@/lib/csv";
 import { METALS, METAL_KEYS, fineOz, fmtDay, fmtOz, usd, type Metal, type Purchase } from "@/lib/metals";
 import type { PurchaseStore } from "@/lib/store";
 import type { Prices } from "./Dashboard";
@@ -45,12 +45,10 @@ export default function ImportExport({ purchases, prices, store, onImported }: {
 
   function applyGrid(g: string[][]) {
     setGrid(g); setMsg(null);
-    const h = findHeaderRow(g);
+    const h = findHeaderRowAny(g);
     setDetectedHeader(h < 0 ? 0 : h);
     setHasHeader(h >= 0);
-    const width = Math.max(0, ...g.slice(0, 30).map((r) => r.length));
-    const guessed = h >= 0 ? guessFields(g[h]) : [];
-    setFields(g.length ? Array.from({ length: width }, (_, i) => guessed[i] ?? "ignore") : null);
+    setFields(g.length ? guessColumns(g, h) : null);
   }
   function loadText(t: string) {
     setText(t); setFileName(null); setSheets([]);
@@ -164,7 +162,7 @@ export default function ImportExport({ purchases, prices, store, onImported }: {
                   <div className="sechead">
                     <strong>Match your columns</strong>
                     <label className="check small" htmlFor="imp-header">
-                      <input id="imp-header" type="checkbox" checked={hasHeader} onChange={(e) => setHasHeader(e.target.checked)} />
+                      <input id="imp-header" type="checkbox" checked={hasHeader} onChange={(e) => { setHasHeader(e.target.checked); setFields(guessColumns(grid, e.target.checked ? detectedHeader : -1)); }} />
                       {detectedHeader > 0 ? `Row ${detectedHeader + 1} is column names` : "First row is column names"}
                     </label>
                   </div>

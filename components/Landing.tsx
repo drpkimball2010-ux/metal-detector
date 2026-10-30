@@ -29,6 +29,7 @@ export default function Landing() {
           <p className="lede">
             Log every coin, bar and round you buy. {SITE_NAME} weighs out the fine metal, prices it at live spot,
             and shows your total value and your gain or loss against what you paid.
+            Already keep a spreadsheet? Drop it in and your whole stack is loaded in seconds.
           </p>
           <div className="hero-actions">
             <Link className="button-link primary" href="/demo">Try the demo, no account needed</Link>
@@ -49,6 +50,48 @@ export default function Landing() {
                 <div className="small muted num">{m.oz}</div>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="import-band" aria-labelledby="import-title">
+        <div className="import-copy">
+          <p className="eyebrow">Bring your spreadsheet</p>
+          <h2 id="import-title" className="display">Your stack, imported in seconds. Any format.</h2>
+          <p className="lede">
+            No retyping years of purchases. Upload the sheet you already keep, from Excel, Google Sheets or a CSV,
+            or just paste it in. {SITE_NAME} reads it the way you wrote it: it finds the dates, the metal, the weight,
+            the purity and what you paid, even with no column names or ones like &ldquo;Amt&rdquo; and &ldquo;Wt&rdquo;.
+          </p>
+          <ul className="import-points">
+            <li><strong>Any layout.</strong> Columns in any order, title rows, totals rows, blank rows.</li>
+            <li><strong>Knows the coins.</strong> &ldquo;Tube of 25 Silver Eagles&rdquo;, &ldquo;$10 face junk&rdquo;, &ldquo;1/10 oz Gold Eagle&rdquo; and Krugerrands are weighed correctly.</li>
+            <li><strong>Any style.</strong> 3/15/2024 or 15/03/2024, $1,950.00 or 1.950,00, oz, grams, kilos, 14k or .999.</li>
+            <li><strong>You check first.</strong> See every row before anything is saved, and fix any column with one click.</li>
+          </ul>
+          <div className="hero-actions">
+            <Link className="button-link primary" href="/demo">Try importing in the demo</Link>
+            <a className="button-link" href="#get-started">Create a free account</a>
+          </div>
+        </div>
+
+        <div className="import-visual" aria-label="Example: a messy spreadsheet becomes tracked purchases">
+          <div className="sheet small num" aria-hidden="true">
+            <div className="sheet-row sheet-title">my stack 2024</div>
+            <div className="sheet-row"><span>Thing</span><span>Wt</span><span>Amt</span><span>When</span></div>
+            <div className="sheet-row"><span>Silver Eagle x20</span><span>1 oz</span><span>$625</span><span>4/2/24</span></div>
+            <div className="sheet-row"><span>Krugerrand</span><span></span><span>$1,950</span><span>3/15/24</span></div>
+            <div className="sheet-row"><span>14k chain</span><span>12.5 g</span><span>$420</span><span>Aug 2021</span></div>
+            <div className="sheet-row sheet-total"><span>TOTAL</span><span></span><span>$2,995</span><span></span></div>
+          </div>
+          <div className="import-arrow" aria-hidden="true">↓</div>
+          <div className="import-result">
+            <div className="small"><strong>3 ready to import</strong> · 1 totals row skipped</div>
+            <ul className="small num">
+              <li><span className="chip" style={{ background: "var(--ag)" }} />20 × Silver Eagle · 19.98 oz silver</li>
+              <li><span className="chip" style={{ background: "var(--au)" }} />Krugerrand · 1.000 oz gold</li>
+              <li><span className="chip" style={{ background: "var(--au)" }} />14k chain · 0.235 oz gold</li>
+            </ul>
           </div>
         </div>
       </section>
