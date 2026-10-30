@@ -2,15 +2,11 @@ import Link from "next/link";
 import Auth from "./Auth";
 import Footer from "./Footer";
 import WhereToBuy from "./WhereToBuy";
+import HeroDemo from "./HeroDemo";
 import { SITE_NAME } from "@/lib/site";
 import BrandMark from "@/components/BrandMark";
 
-// Public homepage for visitors who aren't signed in. The figures in the preview are labeled examples.
-const EXAMPLE = [
-  { name: "Gold", color: "var(--au)", value: "$8,013", oz: "2 × 1 oz bars" },
-  { name: "Silver", color: "var(--ag)", value: "$5,362", oz: "100 Silver Eagles" },
-  { name: "Platinum", color: "var(--pt)", value: "$1,566", oz: "1 Platinum Eagle" },
-];
+// Public homepage for visitors who aren't signed in.
 
 export default function Landing() {
   return (
@@ -38,20 +34,9 @@ export default function Landing() {
           </div>
         </div>
 
-        <div className="preview" aria-label="Example of the dashboard">
-          <Link className="preview-tag small" href="/demo">Example stack · Try it →</Link>
-          <div className="eyebrow">Melt value at spot</div>
-          <div className="preview-total num">$14,940.86</div>
-          <div className="small up num">Up $1,212.40 (+8.8%)</div>
-          <div className="tiles" style={{ marginTop: 12 }}>
-            {EXAMPLE.map((m) => (
-              <div className="tile" key={m.name}>
-                <div className="name"><span className="chip" style={{ background: m.color }} />{m.name}</div>
-                <div className="val num">{m.value}</div>
-                <div className="small muted num">{m.oz}</div>
-              </div>
-            ))}
-          </div>
+        <div className="hero-demo-wrap">
+          <HeroDemo />
+          <Link className="small" href="/demo">Try it yourself in the demo →</Link>
         </div>
       </section>
 

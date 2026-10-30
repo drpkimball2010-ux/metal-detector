@@ -220,3 +220,13 @@ table.map td, table.map th { min-width: 150px; }
 .privacy-points li::before { content: "✓"; position: absolute; left: 0; color: var(--up); font-weight: 700; }
 .privacy-points strong { color: var(--fg); }
 @media (max-width: 760px) { .privacy-band { grid-template-columns: 1fr; } }
+
+/* Homepage demo video */
+.hero-demo-wrap { display: grid; gap: 6px; justify-items: center; min-width: 0; }
+.hero-demo { display: block; width: 100%; max-width: 520px; height: auto; aspect-ratio: 1000 / 1060; background: var(--bg); }
+.hero-demo {
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 4%, #000 96%, transparent), linear-gradient(to bottom, transparent, #000 3%, #000 95%, transparent);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(to right, transparent, #000 4%, #000 96%, transparent), linear-gradient(to bottom, transparent, #000 3%, #000 95%, transparent);
+  mask-composite: intersect;
+}
