@@ -1,6 +1,6 @@
 // Spreadsheet import and export. Reads the columns stackers already keep
 // (date, item, weight, purity, price paid...) and turns each row into a purchase.
-import { GRADES, METALS, fineOz, type Metal, type Purchase, type Unit } from "./metals";
+import { GRADES, JUNK, METALS, fineOz, type Metal, type Purchase, type Unit } from "./metals";
 import type { NewPurchase } from "./store";
 
 // ---------- CSV parsing (quotes, commas inside quotes, tabs or semicolons as separators) ----------
@@ -319,7 +319,8 @@ const KNOWN: { re: RegExp; metal: Metal; weight: number; unit: Unit; purity: num
   { re: /silver maple|maple leaf/i, metal: "XAG", weight: 1, unit: "ozt", purity: 0.9999, grade: "Four nines (.9999)" },
   { re: /britannia/i, metal: "XAG", weight: 1, unit: "ozt", purity: 0.999, grade: "Fine (.999)" },
   { re: /morgan|peace dollar/i, metal: "XAG", weight: 26.73, unit: "g", purity: 0.9, grade: "Coin silver, 90% (.900)" },
-  { re: /kennedy half|franklin half|walking liberty half/i, metal: "XAG", weight: 12.5, unit: "g", purity: 0.9, grade: "Coin silver, 90% (.900)" },
+  { re: /40\s*%.*hal(f|ves)|hal(f|ves).*40\s*%|(196[5-9]|1970).*kennedy/i, metal: "XAG", weight: 11.5, unit: "g", purity: 0.4, grade: "40% (.400)" },
+  { re: /(kennedy|franklin|walking liberty|barber|silver) hal(f|ves)/i, metal: "XAG", weight: 12.5, unit: "g", purity: 0.9, grade: "Coin silver, 90% (.900)" },
   { re: /quarter/i, metal: "XAG", weight: 6.25, unit: "g", purity: 0.9, grade: "Coin silver, 90% (.900)" },
   { re: /\bdimes?\b/i, metal: "XAG", weight: 2.5, unit: "g", purity: 0.9, grade: "Coin silver, 90% (.900)" },
   { re: /war nickel/i, metal: "XAG", weight: 5, unit: "g", purity: 0.35, grade: "War nickel, 35% (.350)" },
@@ -376,7 +377,13 @@ export function buildRows(rows: string[][], fields: Field[], firstLine = 1, head
       if (tw) w = { weight: tw.weight / qty, unit: tw.unit };
     }
     const face = (item + " " + col(r, "weight")).match(/\$\s*(\d+(\.\d+)?)\s*(fv|face)/i);
-    if (!w && face && metal === "XAG") { w = { weight: (+face[1] * FACE_FINE_OZ_PER_DOLLAR) / qty, unit: "ozt" }; fine = true; }
+    if (!w && face && (metal === "XAG" || metal === "XCU")) {
+      // Face value of a known coin (war nickels, 40% halves, pennies...) -> that many coins at that coin's specs
+      const coin = JUNK.find((j) => j.metal === metal && !j.mixed && known && Math.abs(j.purity - known.purity) < 1e-6 &&
+        Math.abs(j.weight - known.weight) < 1e-6);
+      if (coin) { qty = Math.round((+face[1] / coin.face) * qty); w = { weight: coin.weight, unit: coin.unit }; }
+      else if (metal === "XAG") { w = { weight: (+face[1] * FACE_FINE_OZ_PER_DOLLAR) / qty, unit: "ozt" }; fine = true; }
+    }
     if (!w && known) w = { weight: known.weight, unit: known.unit };
     if (!w) {
       const inItem = item.match(/(\d+\s+\d+\s*\/\s*\d+|\d+\s*\/\s*\d+|\d*\.?\d+)\s*-?\s*(troy\s*)?(ozt|oz|ounces?|grams?|g\b|gr\b|kilos?|kg|lbs?|pounds?)\b/i);

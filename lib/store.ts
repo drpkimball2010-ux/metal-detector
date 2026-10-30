@@ -77,7 +77,7 @@ function newId() {
 const DEMO_SEED: NewPurchase[] = [
   { metal: "XAG", description: "American Silver Eagle 1 oz", qty: 20, weight: 1, unit: "ozt", purity: 0.999, grade: "Fine (.999)", bought_now: false, bought_on: "2026-07-16", paid: null },
   { metal: "XAU", description: "American Gold Eagle 1 oz", qty: 1, weight: 1.0909, unit: "ozt", purity: 0.9167, grade: "22k (.9167)", bought_now: false, bought_on: "2026-07-16", paid: null },
-  { metal: "XAG", description: "90% junk silver, $1 face", qty: 5, weight: 0.8038, unit: "ozt", purity: 0.9, grade: "Coin silver, 90% (.900)", bought_now: false, bought_on: "2026-07-20", paid: null },
+  { metal: "XAG", description: "90% junk silver, mixed, $5.00 face", qty: 5, weight: 0.8038, unit: "ozt", purity: 0.9, grade: "Coin silver, 90% (.900)", bought_now: false, bought_on: "2026-07-20", paid: null },
   { metal: "XPT", description: "American Platinum Eagle 1 oz", qty: 1, weight: 1, unit: "ozt", purity: 0.9995, grade: "Fine (.9995)", bought_now: false, bought_on: "2026-07-01", paid: null },
   { metal: "XCU", description: "Copper round 1 oz", qty: 25, weight: 1, unit: "oz", purity: 0.999, grade: "Fine (.999)", bought_now: true, bought_on: null, paid: null },
 ];

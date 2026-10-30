@@ -44,15 +44,29 @@ export const PRESETS: Preset[] = [
   { id: "gml", name: "Gold Maple Leaf 1 oz", metals: ["XAU"], weight: 1, unit: "ozt", purity: 0.9999, label: "Gold Maple Leaf 1 oz" },
   { id: "ase", name: "American Silver Eagle 1 oz", metals: ["XAG"], weight: 1, unit: "ozt", purity: 0.999, label: "American Silver Eagle 1 oz" },
   { id: "sml", name: "Silver Maple Leaf 1 oz", metals: ["XAG"], weight: 1, unit: "ozt", purity: 0.9999, label: "Silver Maple Leaf 1 oz" },
-  { id: "junk", name: "90% junk silver ($1 face)", metals: ["XAG"], weight: 0.8038, unit: "ozt", purity: 0.9, label: "90% junk silver, $1 face" },
   { id: "ster", name: "Sterling flatware / jewelry", metals: ["XAG"], weight: 1, unit: "g", purity: 0.925, label: "Sterling silver" },
   { id: "ape", name: "American Platinum Eagle 1 oz", metals: ["XPT"], weight: 1, unit: "ozt", purity: 0.9995, label: "American Platinum Eagle 1 oz" },
   { id: "rhg", name: "Rhodium bar 1 g", metals: ["XRH"], weight: 1, unit: "g", purity: 0.9995, label: "Rhodium bar 1 g" },
   { id: "rhoz", name: "Rhodium round 1 oz", metals: ["XRH"], weight: 1, unit: "ozt", purity: 0.9995, label: "Rhodium 1 oz" },
   { id: "cur", name: "Copper round 1 oz (avdp)", metals: ["XCU"], weight: 1, unit: "oz", purity: 0.999, label: "Copper round 1 oz" },
   { id: "cub", name: "Copper bar 1 lb", metals: ["XCU"], weight: 16, unit: "oz", purity: 0.999, label: "Copper bar 1 lb" },
-  { id: "penny", name: "Pre-1982 pennies ($1 = 100 coins)", metals: ["XCU"], weight: 311, unit: "g", purity: 0.95, label: "Pre-1982 pennies, $1 face" },
 ];
+
+// Junk coins: US circulation coins valued for their metal. Enter the face value or the number of coins.
+// weight/unit/purity are per coin. "Mixed" is priced per $1 of face ($1 of 90% coins holds about 0.7234 oz of pure silver, allowing for wear),
+// so only face value makes sense for it.
+export type JunkCoin = { id: string; name: string; metal: Metal; weight: number; unit: Unit; purity: number; face: number; label: string; mixed?: boolean };
+export const JUNK: JunkCoin[] = [
+  { id: "j-dime", name: "90% dimes (1964 and earlier)", metal: "XAG", weight: 2.5, unit: "g", purity: 0.9, face: 0.1, label: "90% silver dimes" },
+  { id: "j-quarter", name: "90% quarters (1964 and earlier)", metal: "XAG", weight: 6.25, unit: "g", purity: 0.9, face: 0.25, label: "90% silver quarters" },
+  { id: "j-half", name: "90% half dollars (1964 and earlier)", metal: "XAG", weight: 12.5, unit: "g", purity: 0.9, face: 0.5, label: "90% silver half dollars" },
+  { id: "j-dollar", name: "Morgan or Peace dollars (90%)", metal: "XAG", weight: 26.73, unit: "g", purity: 0.9, face: 1, label: "Morgan / Peace silver dollars" },
+  { id: "j-mixed", name: "90% mixed coins (face value only)", metal: "XAG", weight: 0.8038, unit: "ozt", purity: 0.9, face: 1, label: "90% junk silver, mixed", mixed: true },
+  { id: "j-40", name: "40% Kennedy halves (1965–1970)", metal: "XAG", weight: 11.5, unit: "g", purity: 0.4, face: 0.5, label: "40% silver Kennedy halves" },
+  { id: "j-war", name: "War nickels, 35% (1942–1945)", metal: "XAG", weight: 5, unit: "g", purity: 0.35, face: 0.05, label: "35% silver war nickels" },
+  { id: "j-penny", name: "Pre-1982 copper pennies", metal: "XCU", weight: 3.11, unit: "g", purity: 0.95, face: 0.01, label: "Pre-1982 copper pennies" },
+];
+export const faceStr = (n: number) => "$" + n.toFixed(2);
 
 // Prices under $10 (copper) get more decimal places
 export const usdSpot = (n: number) =>
