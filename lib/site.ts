@@ -9,7 +9,7 @@ export const SITE_URL = "https://trackmystack.org";
 export const CONTACT_EMAIL = "support@trackmystack.org";
 
 // Date the privacy policy and terms took effect (update when you change them)
-export const POLICY_DATE = "October 24, 2026";
+export const POLICY_DATE = "October 29, 2026";
 
 // Dealer affiliate links. Add them as environment variables in Vercel
 // (Settings -> Environment Variables), then redeploy. A dealer without a link stays hidden.

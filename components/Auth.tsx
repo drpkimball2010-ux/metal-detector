@@ -68,6 +68,9 @@ export default function Auth({ initialMode = "signup" }: { initialMode?: "signin
         )}
         <button className="primary" type="submit" disabled={busy}>{mode === "signin" ? "Sign in" : "Create free account"}</button>
         {msg && <p className={`msg ${msg.ok ? "ok" : "bad"}`} style={{ margin: 0 }}>{msg.text}</p>}
+        <p className="small muted" style={{ margin: 0 }}>
+          🔒 Only you can see your stack. We never ask for your name, address or where you store your metal, and we never sell your data.
+        </p>
       </form>
     </div>
   );

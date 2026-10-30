@@ -113,7 +113,10 @@ export default function AddPurchase({ prices, store, onAdded }: { prices: Prices
 
   return (
     <section>
-      <h2>Log a purchase</h2>
+      <div className="sechead">
+        <h2>Log a purchase</h2>
+        <span className="small muted">🔒 Only you can see what you log here</span>
+      </div>
       <form className="card" onSubmit={submit} autoComplete="off">
         <div className="grid">
           <div className="field">

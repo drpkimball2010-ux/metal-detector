@@ -62,6 +62,17 @@ export default function Privacy() {
       </section>
 
       <section>
+        <h2>Who can see your holdings</h2>
+        <ul>
+          <li><strong>You:</strong> when you&apos;re signed in to your account.</li>
+          <li><strong>Other users and the public:</strong> never. Database rules allow each account to read and change only its own purchases, and nothing about your holdings is published or shown on the site.</li>
+          <li><strong>Us:</strong> as the operator, we have administrator access to the database so we can keep the service running and fix problems. We only look at a specific account&apos;s data to help when you ask us to, to investigate abuse or a technical problem, or when the law requires it.</li>
+          <li><strong>Our service providers:</strong> Supabase stores the data on our behalf and is bound by its own security and privacy commitments.</li>
+          <li><strong>Legal requests:</strong> we may disclose information if required by a valid legal process, such as a court order. Because we never collect your name, address or where you store your metal, there is very little to disclose beyond your email address and the purchases you entered.</li>
+        </ul>
+      </section>
+
+      <section>
         <h2>Security</h2>
         <p>
           Data is sent over encrypted connections (HTTPS), and database rules ensure each account can read and change only

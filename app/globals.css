@@ -210,3 +210,13 @@ table.map td, table.map th { min-width: 150px; }
 .seg { display: inline-flex; justify-self: start; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--sunk); }
 .seg button { border: 0; border-radius: 0; background: transparent; color: var(--muted); padding: 7px 12px; }
 .seg button[aria-checked="true"] { background: var(--accent); color: var(--accent-fg); }
+
+/* Landing: privacy band */
+.privacy-band { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px 32px; align-items: start; border: 1px solid var(--line); border-radius: 16px; padding: clamp(18px, 4vw, 32px); background: var(--sunk); }
+.privacy-band h2 { margin: 4px 0 8px; }
+.privacy-band > p.small { grid-column: 1 / -1; }
+.privacy-points { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+.privacy-points li { padding-left: 22px; position: relative; color: var(--muted); }
+.privacy-points li::before { content: "✓"; position: absolute; left: 0; color: var(--up); font-weight: 700; }
+.privacy-points strong { color: var(--fg); }
+@media (max-width: 760px) { .privacy-band { grid-template-columns: 1fr; } }

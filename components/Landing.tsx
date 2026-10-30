@@ -96,6 +96,24 @@ export default function Landing() {
         </div>
       </section>
 
+      <section className="privacy-band" aria-labelledby="privacy-title">
+        <div>
+          <p className="eyebrow">Private by design</p>
+          <h2 id="privacy-title">Your stack is nobody else&apos;s business.</h2>
+          <p className="muted" style={{ margin: 0 }}>
+            Only you can see your purchases, and only while signed in to your account. Other users and the public can&apos;t,
+            and the database itself refuses to show one account&apos;s holdings to another.
+          </p>
+        </div>
+        <ul className="privacy-points">
+          <li><strong>Just an email and a password.</strong> No name, home address, phone number or card details.</li>
+          <li><strong>Never asks where you keep it.</strong> No storage locations, safes or vaults. Just what you bought.</li>
+          <li><strong>Never sold or shared.</strong> No ad trackers. Your holdings aren&apos;t sold or given to dealers.</li>
+          <li><strong>Gone when you say so.</strong> Delete any purchase, or your whole account, at any time.</li>
+        </ul>
+        <p className="small muted" style={{ margin: 0 }}>Exactly who can access what is spelled out in our <Link href="/privacy">Privacy Policy</Link>.</p>
+      </section>
+
       <WhereToBuy variant="public" />
 
       <section className="features">
@@ -112,8 +130,8 @@ export default function Landing() {
           <p>Back-dated purchases are matched to that day&apos;s recorded spot price, so you can see the premium you paid.</p>
         </div>
         <div className="feature">
-          <h3>Private to you</h3>
-          <p>Your purchases are visible only to your account. You can delete your account and data at any time.</p>
+          <h3>Export anytime</h3>
+          <p>Download your whole stack as an Excel file with a summary, every purchase and today&apos;s spot prices.</p>
         </div>
       </section>
 
