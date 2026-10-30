@@ -7,7 +7,7 @@ type Spot = { price: number; quoted_at: string } | undefined;
 type Cell = { value?: string | number | Date | null; type?: StringConstructor | NumberConstructor | DateConstructor; format?: string;
   fontWeight?: "bold"; fontSize?: number; textColor?: string; backgroundColor?: string; align?: "left" | "center" | "right";
   borderColor?: string; borderStyle?: "thin"; bottomBorderColor?: string; bottomBorderStyle?: "thin" | "medium"; topBorderColor?: string; topBorderStyle?: "thin" | "medium";
-  columnSpan?: number; wrap?: boolean; fontStyle?: "italic"; height?: number } | null;
+  columnSpan?: number; wrap?: boolean; indent?: number; fontStyle?: "italic"; height?: number } | null;
 
 const MONEY = "$#,##0.00";
 const cents = (n: number) => Math.round(n * 100) / 100;
@@ -104,13 +104,24 @@ export async function exportXlsx(purchases: Purchase[], spot: Partial<Record<Met
       num(m.paid ? g / m.paid : null, PCT, { ...b, textColor: color }), num(total ? m.val / total : null, "0.0%", b)] as Cell[];
   });
   const spotRows = METAL_KEYS.map((k) => [txt(METALS[k].name), num(spot[k]?.price, SPOT, { align: "right" }),
-    txt(spot[k]?.quoted_at ? when(new Date(spot[k]!.quoted_at)) : "", { textColor: MUTED })] as Cell[]);
+    txt(spot[k]?.quoted_at ? when(new Date(spot[k]!.quoted_at)) : "", { textColor: MUTED, indent: 1 })] as Cell[]);
   const blank: Cell[] = [];
+  // Every purchase, right on the Summary tab (full details are on the Purchases tab)
+  const itemHead = ["Item", "Date bought", "Metal", "Quantity", "Pure troy oz", "Total paid", "Spot when bought", "Value now", "Gain / loss", "Gain / loss %"];
+  const itemRows = sorted.map((p, i) => {
+    const oz = fineOz(p), paid = p.paid != null ? Number(p.paid) : null, nowP = spot[p.metal]?.price;
+    const val = nowP != null ? cents(oz * nowP) : null, g = paid != null && val != null ? cents(val - paid) : null;
+    const b = { backgroundColor: i % 2 ? BAND : undefined }, c = g == null ? undefined : g >= 0 ? "#1D7A4C" : "#B23A3A";
+    return [txt(p.description || METALS[p.metal].name, b), { ...day(p.bought_on ?? localDay(p.created_at)), ...b, align: "left" }, txt(METALS[p.metal].name, b),
+      num(Number(p.qty), "#,##0.####", b), num(oz, OZ, b), num(paid, MONEY, b),
+      num(p.spot_then != null ? Number(p.spot_then) : null, SPOT, b), num(val, MONEY, b),
+      num(g, MONEY, { ...b, textColor: c }), num(g != null && paid ? g / paid : null, PCT, { ...b, textColor: c })] as Cell[];
+  });
   const gainColor = gain >= 0 ? "#1D7A4C" : "#B23A3A";
   const summarySheet = {
     sheet: "Summary",
     showGridLines: false,
-    columns: [22, 13, 15, 14, 16, 16, 15, 15, 14, 14].map((width) => ({ width })),
+    columns: [36, 13, 15, 14, 16, 16, 15, 15, 14, 14].map((width) => ({ width })),
     data: [
       [{ value: `${SITE_NAME}: your stack`, fontWeight: "bold", fontSize: 18, columnSpan: 6, height: 30 }],
       [{ value: `Exported ${when(now)}${quoted ? ` · spot prices as of ${when(new Date(quoted))}` : ""}`, textColor: MUTED, columnSpan: 8 }],
@@ -126,6 +137,14 @@ export async function exportXlsx(purchases: Purchase[], spot: Partial<Record<Met
       [txt("Total", totalTop), num(purchases.length, "0", totalTop), { value: null, ...totalTop }, { value: null, ...totalTop }, { value: null, ...totalTop },
         num(total, MONEY, totalTop), num(cost, MONEY, totalTop), num(gain, MONEY, { ...totalTop, textColor: gainColor }),
         num(cost ? gain / cost : null, PCT, { ...totalTop, textColor: gainColor }), num(total ? 1 : null, "0.0%", totalTop)],
+      blank,
+      [{ value: `Your purchases (${purchases.length})`, fontWeight: "bold", fontSize: 13 }, null, null, null,
+        { value: "More detail, like premium over melt, is on the Purchases tab.", textColor: MUTED, fontStyle: "italic", columnSpan: 6 }],
+      itemHead.map((h, i) => head(h, i < 3 ? "left" : "right")),
+      ...itemRows,
+      [txt("Total", totalTop), ...Array.from({ length: 4 }, () => ({ value: null, ...totalTop })), num(cost, MONEY, totalTop),
+        { value: null, ...totalTop }, num(total, MONEY, totalTop), num(gain, MONEY, { ...totalTop, textColor: gainColor }),
+        num(cost ? gain / cost : null, PCT, { ...totalTop, textColor: gainColor })],
       blank,
       [{ value: "Spot prices at export", fontWeight: "bold", fontSize: 13 }],
       [head("Metal"), head("Spot ($/ozt)", "right"), { ...head("Quoted at"), columnSpan: 3 }],
