@@ -85,7 +85,7 @@ const DEMO_SEED: NewPurchase[] = [
 export function demoStore(currentSpot: (m: Metal) => { price: number; at: string } | null): PurchaseStore & { reset(): Promise<Purchase[]> } {
   async function build(p: NewPurchase): Promise<Purchase> {
     const hit = p.bought_now ? currentSpot(p.metal) : p.bought_on ? await spotOnDay(p.metal, p.bought_on) : null;
-    const paidFromSpot = p.paid == null || p.bought_now;
+    const paidFromSpot = p.paid == null;
     const paid = paidFromSpot ? (hit ? Math.round(fineOz(p) * hit.price * 100) / 100 : null) : p.paid;
     return {
       ...p, id: newId(), paid, paid_from_spot: paidFromSpot,

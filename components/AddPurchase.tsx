@@ -86,7 +86,7 @@ export default function AddPurchase({ prices, store, onAdded }: { prices: Prices
     if (!(purity > 0 && purity <= 1)) return setMsg({ text: "Purity must be a decimal between 0 and 1, like 0.925.", ok: false });
     if (!boughtNow && !day) return setMsg({ text: "Enter the date you bought it, or check Bought just now.", ok: false });
     if (!boughtNow && day > todayLocal()) return setMsg({ text: "That date is in the future.", ok: false });
-    if (!boughtNow && paid.trim() !== "" && !(parseFloat(paid) >= 0)) return setMsg({ text: "Total paid must be a dollar amount.", ok: false });
+    if (paid.trim() !== "" && !(parseFloat(paid) >= 0)) return setMsg({ text: "Total paid must be a dollar amount.", ok: false });
 
     setBusy(true);
     let row: Purchase;
@@ -97,7 +97,7 @@ export default function AddPurchase({ prices, store, onAdded }: { prices: Prices
         qty: junk ? junkUnits : parseFloat(qty), weight: junk ? junk.weight : parseFloat(weight), unit: junk ? junk.unit : unit,
         purity, grade: gradeLabel,
         bought_now: boughtNow, bought_on: boughtNow ? null : day,
-        paid: boughtNow || paid.trim() === "" ? null : parseFloat(paid),
+        paid: paid.trim() === "" ? null : parseFloat(paid),
       });
     } catch {
       setBusy(false);
@@ -109,7 +109,7 @@ export default function AddPurchase({ prices, store, onAdded }: { prices: Prices
     setMsg({ text: "Added.", ok: true });
   }
 
-  const blankPaid = boughtNow || paid.trim() === "";
+  const blankPaid = paid.trim() === "";
 
   return (
     <section>
@@ -193,10 +193,10 @@ export default function AddPurchase({ prices, store, onAdded }: { prices: Prices
           <div className="field">
             <label htmlFor="f-paid">Total paid ($)</label>
             <input id="f-paid" className="num" type="number" min="0" step="any" inputMode="decimal"
-              disabled={boughtNow} placeholder={boughtNow ? "Logged at spot" : "Blank = spot price"}
-              value={boughtNow ? "" : paid} onChange={(e) => setPaid(e.target.value)} aria-describedby="paid-hint" />
+              placeholder="Blank = spot price"
+              value={paid} onChange={(e) => setPaid(e.target.value)} aria-describedby="paid-hint" />
             <span className="small muted" id="paid-hint">
-              {boughtNow ? "To enter what you paid, uncheck Bought just now." : "Leave blank to log it at that day's spot price."}
+              {boughtNow ? "Leave blank to log it at today's spot price." : "Leave blank to log it at that day's spot price."}
             </span>
           </div>
           <div className="field">
@@ -204,7 +204,7 @@ export default function AddPurchase({ prices, store, onAdded }: { prices: Prices
             <input id="f-date" type="date" max={todayLocal()} disabled={boughtNow} value={day} onChange={(e) => setDay(e.target.value)} />
             <label className="check" htmlFor="f-now">
               <input id="f-now" type="checkbox" checked={boughtNow}
-                onChange={(e) => { setBoughtNow(e.target.checked); if (e.target.checked) setPaid(""); }} />
+                onChange={(e) => setBoughtNow(e.target.checked)} />
               Bought just now
             </label>
           </div>
