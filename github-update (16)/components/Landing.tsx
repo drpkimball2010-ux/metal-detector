@@ -1,0 +1,136 @@
+import Link from "next/link";
+import Auth from "./Auth";
+import Footer from "./Footer";
+import WhereToBuy from "./WhereToBuy";
+import HeroDemo from "./HeroDemo";
+import { SITE_NAME } from "@/lib/site";
+import BrandMark from "@/components/BrandMark";
+
+// Public homepage for visitors who aren't signed in.
+
+export default function Landing() {
+  return (
+    <main className="wrap landing">
+      <div className="topbar">
+        <div className="brand"><BrandMark /><h1>{SITE_NAME}</h1></div>
+        <div className="hero-actions">
+          <Link className="button-link" href="/demo">Try the demo</Link>
+          <a className="button-link" href="#signin">Sign in</a>
+        </div>
+      </div>
+
+      <section className="hero-landing">
+        <div className="hero-copy">
+          <p className="eyebrow">Free precious metals tracker</p>
+          <h2 className="display">Know what your stack is worth, right now.</h2>
+          <p className="lede">
+            Log every coin, bar and round you buy. {SITE_NAME} weighs out the fine metal, prices it at live spot,
+            and shows your total value and your gain or loss against what you paid.
+            Already keep a spreadsheet? Drop it in and your whole stack is loaded in seconds.
+          </p>
+          <div className="hero-actions">
+            <Link className="button-link primary" href="/demo">Try the demo, no account needed</Link>
+            <a className="button-link" href="#get-started">Create a free account</a>
+          </div>
+        </div>
+
+        <div className="hero-demo-wrap">
+          <HeroDemo />
+          <Link className="small" href="/demo">Try it yourself in the demo →</Link>
+        </div>
+      </section>
+
+      <section className="import-band" aria-labelledby="import-title">
+        <div className="import-copy">
+          <p className="eyebrow">Bring your spreadsheet</p>
+          <h2 id="import-title" className="display">Your stack, imported in seconds. Any format.</h2>
+          <p className="lede">
+            No retyping years of purchases. Upload the sheet you already keep, from Excel, Google Sheets or a CSV,
+            or just paste it in. {SITE_NAME} reads it the way you wrote it: it finds the dates, the metal, the weight,
+            the purity and what you paid, even with no column names or ones like &ldquo;Amt&rdquo; and &ldquo;Wt&rdquo;.
+          </p>
+          <ul className="import-points">
+            <li><strong>Any layout.</strong> Columns in any order, title rows, totals rows, blank rows.</li>
+            <li><strong>Knows the coins.</strong> &ldquo;Tube of 25 Silver Eagles&rdquo;, &ldquo;$10 face junk&rdquo;, &ldquo;1/10 oz Gold Eagle&rdquo; and Krugerrands are weighed correctly.</li>
+            <li><strong>Any style.</strong> 3/15/2024 or 15/03/2024, $1,950.00 or 1.950,00, oz, grams, kilos, 14k or .999.</li>
+            <li><strong>You check first.</strong> See every row before anything is saved, and fix any column with one click.</li>
+          </ul>
+          <div className="hero-actions">
+            <Link className="button-link primary" href="/demo">Try importing in the demo</Link>
+            <a className="button-link" href="#get-started">Create a free account</a>
+          </div>
+        </div>
+
+        <div className="import-visual" aria-label="Example: a messy spreadsheet becomes tracked purchases">
+          <div className="sheet small num" aria-hidden="true">
+            <div className="sheet-row sheet-title">my stack 2024</div>
+            <div className="sheet-row"><span>Thing</span><span>Wt</span><span>Amt</span><span>When</span></div>
+            <div className="sheet-row"><span>Silver Eagle x20</span><span>1 oz</span><span>$625</span><span>4/2/24</span></div>
+            <div className="sheet-row"><span>Krugerrand</span><span></span><span>$1,950</span><span>3/15/24</span></div>
+            <div className="sheet-row"><span>14k chain</span><span>12.5 g</span><span>$420</span><span>Aug 2021</span></div>
+            <div className="sheet-row sheet-total"><span>TOTAL</span><span></span><span>$2,995</span><span></span></div>
+          </div>
+          <div className="import-arrow" aria-hidden="true">↓</div>
+          <div className="import-result">
+            <div className="small"><strong>3 ready to import</strong> · 1 totals row skipped</div>
+            <ul className="small num">
+              <li><span className="chip" style={{ background: "var(--ag)" }} />20 × Silver Eagle · 19.98 oz silver</li>
+              <li><span className="chip" style={{ background: "var(--au)" }} />Krugerrand · 1.000 oz gold</li>
+              <li><span className="chip" style={{ background: "var(--au)" }} />14k chain · 0.235 oz gold</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section className="privacy-band" aria-labelledby="privacy-title">
+        <div>
+          <p className="eyebrow">Private by design</p>
+          <h2 id="privacy-title">Your stack is nobody else&apos;s business.</h2>
+          <p className="muted" style={{ margin: 0 }}>
+            Only you can see your purchases, and only while signed in to your account. Other users and the public can&apos;t,
+            and the database itself refuses to show one account&apos;s holdings to another.
+          </p>
+        </div>
+        <ul className="privacy-points">
+          <li><strong>Just an email and a password.</strong> No name, home address, phone number or card details.</li>
+          <li><strong>Never asks where you keep it.</strong> No storage locations, safes or vaults. Just what you bought.</li>
+          <li><strong>Never sold or shared.</strong> No ad trackers. Your holdings aren&apos;t sold or given to dealers.</li>
+          <li><strong>Gone when you say so.</strong> Delete any purchase, or your whole account, at any time.</li>
+        </ul>
+        <p className="small muted" style={{ margin: 0 }}>Exactly who can access what is spelled out in our <Link href="/privacy">Privacy Policy</Link>.</p>
+      </section>
+
+      <WhereToBuy variant="public" />
+
+      <section className="features">
+        <div className="feature">
+          <h3>Six metals, priced every 10 minutes</h3>
+          <p>Gold, silver, platinum, palladium, rhodium and copper, updated automatically from a live market feed.</p>
+        </div>
+        <div className="feature">
+          <h3>Real purity math</h3>
+          <p>Pick 22k, sterling, 90% coin silver or any grade, or a preset like a Gold Eagle or Krugerrand. It counts only the fine metal.</p>
+        </div>
+        <div className="feature">
+          <h3>Spot price on the day you bought</h3>
+          <p>Back-dated purchases are matched to that day&apos;s recorded spot price, so you can see the premium you paid.</p>
+        </div>
+        <div className="feature">
+          <h3>Export anytime</h3>
+          <p>Download your whole stack as an Excel file with a summary, every purchase and today&apos;s spot prices.</p>
+        </div>
+      </section>
+
+      <section className="signup">
+        <div>
+          <h2>Start tracking your stack</h2>
+          <p className="muted">Free to use. Works on your phone, too: open the site and add it to your home screen.</p>
+          <p className="small" style={{ marginTop: 8 }}>Not ready? <Link href="/demo">Try the demo first</Link>, no account needed.</p>
+        </div>
+        <Auth />
+      </section>
+
+      <Footer />
+    </main>
+  );
+}
