@@ -13,6 +13,7 @@ import AccountSection from "./AccountSection";
 import Footer from "./Footer";
 import { SITE_NAME } from "@/lib/site";
 import { accountStore, demoStore } from "@/lib/store";
+import BrandMark from "@/components/BrandMark";
 
 export type Prices = Partial<Record<Metal, SpotRow>>;
 
@@ -89,7 +90,7 @@ export default function Dashboard({ session, demo = false }: { session?: Session
   return (
     <main className="wrap">
       <div className="topbar">
-        <div className="brand"><span className="brand-mark" aria-hidden="true" /><h1>{SITE_NAME}</h1></div>
+        <div className="brand"><BrandMark /><h1>{SITE_NAME}</h1></div>
         {demo ? (
           <div className="actions">
             <Link className="button-link" href="/">Exit demo</Link>

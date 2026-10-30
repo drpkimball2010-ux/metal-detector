@@ -3,6 +3,7 @@ import Auth from "./Auth";
 import Footer from "./Footer";
 import WhereToBuy from "./WhereToBuy";
 import { SITE_NAME } from "@/lib/site";
+import BrandMark from "@/components/BrandMark";
 
 // Public homepage for visitors who aren't signed in. The figures in the preview are labeled examples.
 const EXAMPLE = [
@@ -15,7 +16,7 @@ export default function Landing() {
   return (
     <main className="wrap landing">
       <div className="topbar">
-        <div className="brand"><span className="brand-mark" aria-hidden="true" /><h1>{SITE_NAME}</h1></div>
+        <div className="brand"><BrandMark /><h1>{SITE_NAME}</h1></div>
         <div className="hero-actions">
           <Link className="button-link" href="/demo">Try the demo</Link>
           <a className="button-link" href="#signin">Sign in</a>

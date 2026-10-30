@@ -5,6 +5,7 @@ import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import Landing from "@/components/Landing";
 import Dashboard from "@/components/Dashboard";
+import BrandMark from "@/components/BrandMark";
 
 export default function Home() {
   const [session, setSession] = useState<Session | null>(null);
@@ -31,7 +32,7 @@ export default function Home() {
   return (
     <>
       <div className="auth-splash" role="status">
-        <span className="brand-mark" aria-hidden="true" />
+        <BrandMark />
         <span>Loading your stack…</span>
       </div>
       <Landing />

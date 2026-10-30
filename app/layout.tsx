@@ -1,10 +1,14 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { AUTH_STORAGE_KEY } from "@/lib/supabase";
+import { SITE_URL } from "@/lib/site";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: "Track My Stack · Gold & silver stack tracker",
-  description: "Log your gold, silver, platinum and palladium and see what it's worth at live spot prices.",
+  description: "Log your gold, silver, platinum, palladium, rhodium and copper and see what it's worth at live spot prices.",
+  openGraph: { title: "Track My Stack", description: "Free precious metals tracker. Know what your stack is worth, right now.", url: SITE_URL, siteName: "Track My Stack", type: "website" },
+  twitter: { card: "summary_large_image" },
   // Ownership check for the Awin affiliate network
   other: { "awin-verification": "Awin" },
 };
