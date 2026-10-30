@@ -106,7 +106,8 @@ export default function ImportExport({ purchases, prices, store, onImported }: {
     setExporting(true); setMsg(null);
     try {
       const { exportXlsx } = await import("@/lib/xlsxExport");
-      await exportXlsx(purchases, prices);
+      const name = await exportXlsx(purchases, prices);
+      setMsg({ text: `Downloaded ${name} to your Downloads folder. Open it in Excel, Google Sheets or Numbers, or upload it to Excel on the web or Google Sheets.`, ok: true });
     } catch {
       setMsg({ text: "Couldn't create the Excel file. Try Plain CSV instead.", ok: false });
     }
@@ -129,7 +130,10 @@ export default function ImportExport({ purchases, prices, store, onImported }: {
             {exporting ? "Preparing…" : "Export to Excel"}
           </button>
           <span className="small muted">
-            Summary plus every purchase, valued at today&apos;s spot. Opens in Excel, Google Sheets or Numbers.{" "}
+            Downloads a spreadsheet file with a summary and every purchase, valued at today&apos;s spot. Open it in Excel, Google Sheets or Numbers.
+            To use it online, upload it to{" "}
+            <a href="https://www.office.com/launch/excel" target="_blank" rel="noopener noreferrer">Excel on the web</a> (click Upload) or{" "}
+            <a href="https://sheets.google.com" target="_blank" rel="noopener noreferrer">Google Sheets</a> (open a blank sheet, then File, Import, Upload).{" "}
             <button type="button" className="link" style={{ padding: 0, color: "var(--accent)", fontWeight: 400 }} disabled={!purchases.length}
               onClick={() => download(`track-my-stack-${new Date().toISOString().slice(0, 10)}.csv`, toCsv(purchases, spotNow))}>
               Plain CSV

@@ -139,4 +139,5 @@ export async function exportXlsx(purchases: Purchase[], spot: Partial<Record<Met
   const name = `track-my-stack-${now.toISOString().slice(0, 10)}.xlsx`;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   await writeXlsxFile([summarySheet, purchasesSheet] as any, { fontFamily: "Calibri", fontSize: 11 }).toFile(name);
+  return name;
 }
