@@ -39,10 +39,47 @@ export default function Dashboard({ session, demo = false }: { session?: Session
     setPrices(next);
   }, []);
 
+  // Prices from about 24 hours ago, for the "last 24 hours" change
+  const [prev, setPrev] = useState<Partial<Record<Metal, number>>>({});
+  const loadPrev = useCallback(async () => {
+    const target = Date.now() - 24 * 3600e3;
+    const { data } = await supabase.from("price_history").select("metal,price,bucket")
+      .gte("bucket", new Date(target - 3 * 3600e3).toISOString())
+      .lte("bucket", new Date(target + 3 * 3600e3).toISOString());
+    const best: Partial<Record<Metal, { price: number; d: number }>> = {};
+    for (const r of data ?? []) {
+      const d = Math.abs(Date.parse(r.bucket) - target), m = r.metal as Metal;
+      if (!best[m] || d < best[m]!.d) best[m] = { price: Number(r.price), d };
+    }
+    setPrev(Object.fromEntries(Object.entries(best).map(([m, v]) => [m, v!.price])));
+  }, []);
+
   const loadPurchases = useCallback(async () => {
     try { setPurchases(await store.list()); setLoaded(true); }
     catch { setLoadError("Your purchases couldn't load. Check your connection and reload."); }
   }, [store]);
+
+  // Manual refresh: fetch the latest saved prices (and purchases, so any "pending" spot fills in)
+  const [refreshing, setRefreshing] = useState(false);
+  const [refreshNote, setRefreshNote] = useState<string | null>(null);
+  async function refresh() {
+    if (refreshing) return;
+    setRefreshing(true); setRefreshNote(null); setLoadError(null);
+    const before = Object.values(pricesRef.current).map((r) => r?.updated_at).sort().pop();
+    const started = Date.now();
+    await Promise.all([loadPrices().then(loadPurchases), loadPrev()]);
+    await new Promise((r) => setTimeout(r, Math.max(0, 450 - (Date.now() - started)))); // let the spinner show
+    const after = Object.values(pricesRef.current).map((r) => r?.updated_at).sort().pop();
+    setRefreshing(false);
+    setRefreshNote(after && after !== before ? "New prices loaded" : "Already up to date");
+    setTimeout(() => setRefreshNote(null), 4000);
+  }
+  const refreshBtn = (
+    <button type="button" className="refresh" onClick={refresh} disabled={refreshing} aria-label="Refresh prices">
+      <span className={`refresh-icon${refreshing ? " spin" : ""}`} aria-hidden="true">↻</span>
+      {refreshing ? "Refreshing…" : refreshNote ?? "Refresh prices"}
+    </button>
+  );
 
   async function resetDemo() {
     if (!demo) return;
@@ -54,6 +91,8 @@ export default function Dashboard({ session, demo = false }: { session?: Session
   useEffect(() => {
     // Prices first, so the demo's starter stack can use today's spot
     loadPrices().then(loadPurchases);
+    loadPrev();
+    const prevTimer = setInterval(loadPrev, 30 * 60_000);
     // Live: new prices arrive the moment the updater saves them
     const channel = supabase
       .channel("spot-prices")
@@ -64,8 +103,8 @@ export default function Dashboard({ session, demo = false }: { session?: Session
       .subscribe();
     // Backup in case the live connection drops
     const poll = setInterval(loadPrices, 120_000);
-    return () => { supabase.removeChannel(channel); clearInterval(poll); };
-  }, [loadPrices, loadPurchases]);
+    return () => { supabase.removeChannel(channel); clearInterval(poll); clearInterval(prevTimer); };
+  }, [loadPrices, loadPurchases, loadPrev]);
 
   const summary = useMemo(() => {
     const by = Object.fromEntries(METAL_KEYS.map((k) => [k, { oz: 0, val: 0, paid: 0, paidOz: 0 }])) as
@@ -86,6 +125,11 @@ export default function Dashboard({ session, demo = false }: { session?: Session
   const nextUpdate = newest ? new Date(Math.floor(Date.parse(newest) / 600_000) * 600_000 + 600_000) : null;
   const fmtTime = (d: Date | string) => new Date(d).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
   const gain = summary.total - summary.cost;
+  // Change over the last 24 hours: today's value minus the same metal at yesterday's price
+  const pct = (k: Metal) => { const a = prev[k], b = prices[k]?.price; return a && b ? ((b - a) / a) * 100 : null; };
+  const dayParts = METAL_KEYS.filter((k) => summary.by[k].oz > 0 && prev[k] && prices[k]);
+  const dayChange = dayParts.reduce((t, k) => t + summary.by[k].oz * (prices[k]!.price - prev[k]!), 0);
+  const dayBase = dayParts.reduce((t, k) => t + summary.by[k].oz * prev[k]!, 0);
 
   return (
     <main className="wrap">
@@ -120,7 +164,7 @@ export default function Dashboard({ session, demo = false }: { session?: Session
       {loadError && <div className="notice" role="alert">{loadError}</div>}
 
       <header className="hero">
-        <div className="eyebrow">Melt value at spot</div>
+        <div className="hero-top"><div className="eyebrow">Melt value at spot</div>{refreshBtn}</div>
         <div className="total num">{usd(summary.total)}</div>
         <div className="sub">
           <span>Paid <span className="num">{usd(summary.cost)}</span></span>
@@ -130,6 +174,14 @@ export default function Dashboard({ session, demo = false }: { session?: Session
             </span>
           )}
         </div>
+        {dayBase > 0 && (
+          <div className="day num">
+            Last 24 hours:{" "}
+            <strong className={dayChange >= 0 ? "up" : "down"}>
+              {dayChange >= 0 ? "+" : "-"}{usd(Math.abs(dayChange))} ({dayChange >= 0 ? "+" : ""}{((dayChange / dayBase) * 100).toFixed(2)}%)
+            </strong>
+          </div>
+        )}
       </header>
 
       <ImportExport purchases={purchases} prices={prices} store={store}
@@ -172,14 +224,17 @@ export default function Dashboard({ session, demo = false }: { session?: Session
             <div className="tile" key={k}>
               <div className="name"><span className="chip" style={{ background: METALS[k].color }} />{METALS[k].name}</div>
               <div className="val num">{prices[k] ? usdSpot(prices[k]!.price) : "—"}</div>
-              <div className="small muted">per troy oz</div>
+              {(() => { const c = pct(k); return c == null
+                ? <div className="small muted">per troy oz</div>
+                : <div className={`small num ${c >= 0 ? "up" : "down"}`}>{c >= 0 ? "▲ +" : "▼ "}{c.toFixed(2)}% <span className="muted">24h</span></div>; })()}
             </div>
           ))}
         </div>
       </section>
 
       <PurchaseList purchases={purchases} prices={prices} loaded={loaded} store={store}
-        onDeleted={(id) => setPurchases((ps) => ps.filter((p) => p.id !== id))} />
+        onDeleted={(id) => setPurchases((ps) => ps.filter((p) => p.id !== id))}
+        onUpdated={(row) => setPurchases((ps) => ps.map((p) => (p.id === row.id ? row : p)))} />
 
       <AddPurchase prices={prices} store={store} onAdded={(p) => setPurchases((ps) => [p, ...ps])} />
 

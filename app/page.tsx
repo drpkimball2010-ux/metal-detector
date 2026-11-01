@@ -18,7 +18,9 @@ export default function Home() {
       // No saved sign-in after all: reveal the homepage
       if (!data.session) delete document.documentElement.dataset.auth;
     });
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
+      // A password-reset link that landed here instead of /reset: send them to set the new password
+      if (event === "PASSWORD_RECOVERY") { window.location.replace("/reset"); return; }
       setSession(s);
       if (!s) delete document.documentElement.dataset.auth;
     });

@@ -230,3 +230,23 @@ table.map td, table.map th { min-width: 150px; }
   mask-image: linear-gradient(to right, transparent, #000 4%, #000 96%, transparent), linear-gradient(to bottom, transparent, #000 3%, #000 95%, transparent);
   mask-composite: intersect;
 }
+
+/* Refresh prices button */
+.hero-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.refresh { display: inline-flex; align-items: center; gap: 6px; font-size: .85rem; font-weight: 600; padding: 6px 12px; border-radius: 999px; color: var(--accent); }
+.refresh:disabled { opacity: .8; cursor: default; }
+.refresh-icon { display: inline-block; font-size: 1.05rem; line-height: 1; }
+.refresh-icon.spin { animation: tms-spin .8s linear infinite; }
+@keyframes tms-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .refresh-icon.spin { animation: none; } }
+
+/* Editing a purchase */
+.row-actions { display: inline-flex; gap: 12px; }
+tr.editing td { border-bottom-color: transparent; background: var(--sunk); }
+.edit-row td { background: var(--sunk); padding: 4px 14px 18px; }
+.edit-form { display: grid; gap: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; }
+.edit-row .edit-form { position: sticky; left: 0; max-width: min(100%, calc(100vw - 64px)); }
+
+/* Last 24 hours change */
+.hero .day { margin-top: 6px; font-size: .95rem; color: var(--muted); }
+.hero .day strong { font-weight: 600; }

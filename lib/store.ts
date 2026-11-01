@@ -12,7 +12,24 @@ export interface PurchaseStore {
   list(): Promise<Purchase[]>;
   add(p: NewPurchase): Promise<Purchase>;
   addMany(rows: NewPurchase[]): Promise<Purchase[]>;
+  update(id: string, patch: PurchaseEdit): Promise<Purchase>;
   remove(id: string): Promise<void>;
+}
+
+// What a user can change on an existing purchase. Metal, date and the recorded spot stay fixed.
+// paid: a number keeps that amount; null logs it at the recorded spot price.
+export type PurchaseEdit = {
+  description: string | null; qty: number; weight: number; unit: Unit; purity: number; grade: string | null; paid: number | null;
+};
+
+// Same rule the database applies on edit (kept here for the demo)
+export function applyEdit(old: Purchase, e: PurchaseEdit): Purchase {
+  const next = { ...old, ...e } as Purchase;
+  if (e.paid == null) next.paid_from_spot = true;
+  else if (Number(e.paid) !== Number(old.paid)) next.paid_from_spot = false;
+  else next.paid_from_spot = old.paid_from_spot;
+  if (next.paid_from_spot) next.paid = old.spot_then != null ? Math.round(fineOz(next) * Number(old.spot_then) * 100) / 100 : null;
+  return next;
 }
 
 // Nearest recorded price within 72 hours of midday on a date (the same rule the database uses)
@@ -53,6 +70,12 @@ export const accountStore: PurchaseStore = {
       out.push(...((data ?? []) as Purchase[]));
     }
     return out;
+  },
+  async update(id, patch) {
+    // The database keeps the metal, date and spot locked and re-prices "paid at spot" rows itself
+    const { data, error } = await supabase.from("purchases").update(patch).eq("id", id).select().single();
+    if (error) throw error;
+    return data as Purchase;
   },
   async remove(id) {
     const { error } = await supabase.from("purchases").delete().eq("id", id);
@@ -106,6 +129,12 @@ export function demoStore(currentSpot: (m: Metal) => { price: number; at: string
       for (const p of rows) built.push(await build(p));
       writeDemo([...built, ...(readDemo() ?? [])]);
       return built;
+    },
+    async update(id, patch) {
+      const rows = readDemo() ?? [];
+      const i = rows.findIndex((r) => r.id === id);
+      if (i < 0) throw new Error("Not found");
+      rows[i] = applyEdit(rows[i], patch); writeDemo(rows); return rows[i];
     },
     async remove(id) { writeDemo((readDemo() ?? []).filter((r) => r.id !== id)); },
     async reset() { return seed(); },
