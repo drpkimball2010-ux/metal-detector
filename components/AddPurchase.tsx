@@ -91,7 +91,7 @@ export default function AddPurchase({ prices, store, onAdded }: { prices: Prices
     setBusy(true);
     let row: Purchase;
     try {
-      const junkDesc = junk && `${description.trim() || junk.label}, ${junk.mixed ? "" : `${junkUnits} coins, `}${faceStr(junkFace)} face`;
+      const junkDesc = junk && `${description.trim() || junk.label}, ${junk.mixed ? "" : `${junkUnits} coins, `}${faceStr(junkFace, junk.cur)} face`;
       row = await store.add({
         metal, description: junk ? junkDesc : description.trim() || null,
         qty: junk ? junkUnits : parseFloat(qty), weight: junk ? junk.weight : parseFloat(weight), unit: junk ? junk.unit : unit,
@@ -129,11 +129,11 @@ export default function AddPurchase({ prices, store, onAdded }: { prices: Prices
             <label htmlFor="f-preset">Common product</label>
             <select id="f-preset" value={preset} onChange={(e) => applyPreset(e.target.value)}>
               {presets.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
-              {junkCoins.length > 0 && (
-                <optgroup label={metal === "XCU" ? "Copper coins (by face value or count)" : "Junk silver coins (by face value or count)"}>
-                  {junkCoins.map((j) => <option key={j.id} value={j.id}>{j.name}</option>)}
+              {[...new Set(junkCoins.map((j) => j.group))].map((g) => (
+                <optgroup key={g} label={`${g}: by face value or count`}>
+                  {junkCoins.filter((j) => j.group === g).map((j) => <option key={j.id} value={j.id}>{j.name}</option>)}
                 </optgroup>
-              )}
+              ))}
             </select>
           </div>
           <div className="field wide">
@@ -144,19 +144,19 @@ export default function AddPurchase({ prices, store, onAdded }: { prices: Prices
             <div className="field wide junk-box">
               {!junk.mixed && (
                 <div className="seg" role="radiogroup" aria-label="Count by">
-                  <button type="button" role="radio" aria-checked={by === "face"} onClick={() => setJunkBy("face")}>Face value ($)</button>
+                  <button type="button" role="radio" aria-checked={by === "face"} onClick={() => setJunkBy("face")}>Face value ({junk.cur ?? "$"})</button>
                   <button type="button" role="radio" aria-checked={by === "coins"} onClick={() => setJunkBy("coins")}>Number of coins</button>
                 </div>
               )}
-              <label htmlFor="f-junk">{by === "face" ? "Face value ($)" : "How many coins"}</label>
+              <label htmlFor="f-junk">{by === "face" ? `Face value (${junk.cur ?? "$"})` : "How many coins"}</label>
               <input id="f-junk" className="num" type="number" min="0" step={by === "face" ? "0.01" : "1"} inputMode="decimal"
                 placeholder={by === "face" ? "e.g. 2.40" : "e.g. 48"} value={junkAmt} onChange={(e) => setJunkAmt(e.target.value)} autoFocus />
               <span className="small muted">
                 {junk.mixed
                   ? <>Each $1 of face holds about {fmtOz(fineOz({ qty: 1, weight: junk.weight, unit: junk.unit, purity: junk.purity }))} oz of pure silver.</>
-                  : <>Each coin is {faceStr(junk.face)} face, {junk.weight} {junk.unit === "g" ? "g" : "oz"}, {Math.round(junk.purity * 100)}% {METALS[metal].name.toLowerCase()}.</>}
-                {junkUnits > 0 && !junk.mixed && <> <strong className="num">{junkUnits} coins = {faceStr(junkFace)} face.</strong></>}
-                {junkOff && <> {faceStr(junkN)} isn&apos;t an even number of these coins, so it&apos;s rounded to {faceStr(junkFace)}.</>}
+                  : <>Each coin is {faceStr(junk.face, junk.cur)} face, {junk.weight} {junk.unit === "g" ? "g" : "oz"}, {+(junk.purity * 100).toFixed(1)}% {METALS[metal].name.toLowerCase()}.</>}
+                {junkUnits > 0 && !junk.mixed && <> <strong className="num">{junkUnits} coins = {faceStr(junkFace, junk.cur)} face.</strong></>}
+                {junkOff && <> {faceStr(junkN, junk.cur)} isn&apos;t an even number of these coins, so it&apos;s rounded to {faceStr(junkFace, junk.cur)}.</>}
               </span>
             </div>
           ) : (
